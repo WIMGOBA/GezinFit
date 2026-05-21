@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2ECC71">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Gezinfit — Gezinsinstellingen</title>
+<style>
+:root{
+  --bg:#F0FBF4;--surf:#fff;--surf2:#E8F8EE;--surf3:#D4F0DF;
+  --border:rgba(39,174,96,0.15);--border2:rgba(39,174,96,0.3);
+  --text:#1A3A26;--muted:#6B9E7A;--muted2:#A8CDB5;
+  --green:#2ECC71;--green2:#27AE60;--green3:#1AAF5D;
+  --boks:#6C63FF;--danger:#E74C3C;--amber:#F39C12;
+  --r:18px;--rsm:12px;
+  --shadow:0 4px 20px rgba(46,204,113,0.15);
+  --shadow-sm:0 2px 10px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100%}
+.header{padding:48px 16px 14px;background:linear-gradient(135deg,#2ECC71,#27AE60,#1AAF5D);position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(46,204,113,0.35)}
+.back-btn{background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.45);border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;padding:7px 13px;white-space:nowrap}
+.header h1{font-size:18px;font-weight:800;color:#fff;flex:1}
+.header h1 span{color:rgba(255,255,255,0.75)}
+.scroll{padding:16px 14px 80px}
+.info-box{background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 13px;font-size:12px;color:var(--green2);line-height:1.6;margin-bottom:14px;font-weight:600}
+.person-block{background:var(--surf);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.person-block.is-open{border-color:var(--green);box-shadow:var(--shadow)}
+.person-top{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;user-select:none}
+.person-emoji{font-size:22px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:var(--surf2);border-radius:50%;flex-shrink:0}
+.person-info{flex:1}
+.person-name{font-size:14px;font-weight:700;color:var(--text)}
+.person-sub{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+.person-arrow{color:var(--muted2);font-size:20px;transition:transform .25s;line-height:1;font-weight:300}
+.person-block.is-open .person-arrow{transform:rotate(90deg);color:var(--green2)}
+.person-body{padding:0 14px 16px;border-top:1px solid var(--border)}
+.field{margin-bottom:12px;margin-top:12px}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select{width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;font-weight:500;-webkit-appearance:none}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(46,204,113,0.12)}
+.row2{display:flex;gap:8px}
+.row2 .field{flex:1}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.tag{padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border2);color:var(--muted);cursor:pointer;background:var(--surf2);transition:.15s;user-select:none}
+.tag.sel-green{border-color:var(--green);color:#fff;background:var(--green)}
+.tag.sel-red{border-color:var(--danger);color:#fff;background:var(--danger)}
+.tag.sel-blue{border-color:var(--boks);color:#fff;background:var(--boks)}
+.tag.sel-amber{border-color:var(--amber);color:#fff;background:var(--amber)}
+.macros-box{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-radius:var(--rsm);padding:12px;margin-top:12px;border:1.5px solid var(--border)}
+.macros-title{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:9px}
+.macros-row{display:flex;gap:6px}
+.macro-item{flex:1;text-align:center}
+.macro-item .v{font-size:16px;font-weight:800;color:var(--green2)}
+.macro-item .l{font-size:9px;color:var(--muted);margin-top:2px;font-weight:500}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.save-btn{position:fixed;bottom:20px;left:14px;right:14px;padding:15px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(46,204,113,0.5);letter-spacing:.3px;z-index:100}
+.save-feedback{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1A3A26;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:101;opacity:0;transition:opacity .3s;white-space:nowrap}
+.save-feedback.show{opacity:1}
+.warn-box{background:linear-gradient(135deg,#FFF3F3,#FFEBEE);border:1.5px solid #FFCDD2;border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#C62828;line-height:1.6;margin-bottom:12px;font-weight:500}
+.sum-block{background:var(--surf);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-sm)}
+.sum-title{font-size:11px;font-weight:700;color:var(--green2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.sum-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border)}
+.sum-row:last-child{border:none}
+.sum-lbl{color:var(--muted);font-weight:500}
+.sum-val{color:var(--text);font-weight:600;text-align:right;max-width:65%;font-size:11px}
+.sep-title{font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 9px}
+/* DAY SPORTS PLANNER */
+.day-planner{background:var(--surf);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.day-planner-head{padding:13px 14px;background:linear-gradient(135deg,var(--surf2),var(--surf3));border-bottom:1px solid var(--border)}
+.day-planner-title{font-size:14px;font-weight:700;color:var(--text)}
+.day-planner-sub{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500}
+.day-row{padding:10px 14px;border-bottom:1px solid var(--border)}
+.day-row:last-child{border:none}
+.day-row-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.day-badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700}
+.db-train{background:rgba(46,204,113,0.15);color:var(--green2)}
+.db-boks{background:rgba(108,99,255,0.15);color:var(--boks)}
+.db-rust{background:rgba(243,156,18,0.15);color:var(--amber)}
+.db-padel{background:rgba(0,188,212,0.15);color:#0097A7}
+.db-cheat{background:rgba(231,76,60,0.15);color:var(--danger)}
+.person-sport-row{display:flex;flex-wrap:wrap;gap:6px}
+.sport-chip{padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--border2);color:var(--muted);cursor:pointer;background:var(--surf2);display:flex;align-items:center;gap:4px;transition:.15s}
+.sport-chip.active{border-color:var(--green);color:var(--green2);background:rgba(46,204,113,0.08)}
+.sport-chip .emoji{font-size:13px}
+.emoji-picker-overlay{position:fixed;inset:0;background:rgba(26,58,38,0.55);z-index:2000;display:flex;align-items:flex-end;justify-content:center}
+.emoji-picker-sheet{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 0 30px}
+.emoji-picker-head{padding:14px 16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;border-radius:24px 24px 0 0}
+.emoji-picker-title{font-size:15px;font-weight:800;color:var(--text)}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:6px;padding:14px}
+.emoji-opt{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border:2px solid transparent;background:var(--surf2);transition:.15s}
+.emoji-opt:active{background:var(--surf3);border-color:var(--green)}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-btn" href="index.html">← Gezinfit</a>
+  <h1>👨‍👩‍👧‍👧 Gezins<span>instellingen</span></h1>
+</div>
+<div class="scroll">
+  <div class="info-box">Stel per gezinslid de gegevens in. De app past macro-doelen en snacksuggesties automatisch aan op basis van leeftijd, gewicht en sportactiviteit.</div>
+  <div id="profiles-container"></div>
+
+  <div class="sep-title">🗓️ Wie sport welke dag?</div>
+  <div class="day-planner">
+    <div class="day-planner-head">
+      <div class="day-planner-title">Sportplanning per dag</div>
+      <div class="day-planner-sub">Tik op een gezinslid om aan te geven of hij/zij die dag sport en wat</div>
+    </div>
+    <div id="day-planner-rows"></div>
+  </div>
+
+  <div class="sep-title">📊 Gezinsoverzicht</div>
+  <div id="summary-container"></div>
+</div>
+<div class="save-feedback" id="save-feedback">✅ Opgeslagen!</div>
+<button class="save-btn" onclick="saveAll()">💾 Opslaan</button>
+
+<script>
+const SPORTS=['Fitness/Kracht','Boksen','Padel','Voetbal','Handbal','Zwemmen','Hardlopen','Wandelen','Fietsen','Yoga','Dans','Geen sport'];
+const SPORT_EMOJI={'Fitness/Kracht':'💪','Boksen':'🥊','Padel':'🎾','Voetbal':'⚽','Handbal':'🤾','Zwemmen':'🏊','Hardlopen':'🏃','Wandelen':'🚶','Fietsen':'🚴','Yoga':'🧘','Dans':'💃','Geen sport':'😴'};
+const ALLERGIES=['Gluten (coeliakie)','Lactose','Noten','Ei','Soja','Vis','Schaaldieren','Sesamzaad','Geen'];
+const PREFS=['Geen vis','Geen vlees','Vegetarisch','Veganistisch','Geen pittig','Geen ui','Geen knoflook','Geen champignons','Geen avocado','Geen bonen'];
+const ACTIVITY=['Weinig actief','Licht actief (1-2x/week)','Matig actief (3-4x/week)','Zeer actief (5+x/week)','Topsporter'];
+const ACT_FACTOR=[1.2,1.375,1.55,1.725,1.9];
+const DAYS=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const DAY_BADGES=['db-train','db-boks','db-rust','db-boks','db-train','db-cheat','db-padel'];
+const DAY_LABELS=['💪 Kracht','🥊 Boksen','⚡ Rust','🥊 Boksen','💪 Kracht','🎉 Cheatdag','🎾 Padel'];
+
+const DEFAULTS=[
+  {id:'wim',emoji:'💪',name:'Wim',dob:'1980-10-24',gender:'m',weight:74.2,height:177,activity:3,goal:'afvallen',sports:['Fitness/Kracht','Boksen','Padel'],allergies:['Gluten (coeliakie)'],prefs:[]},
+  {id:'mariette',emoji:'👩',name:'Mariette',dob:'1985-11-01',gender:'v',weight:65,height:170,activity:2,goal:'gezond',sports:[],allergies:[],prefs:[]},
+  {id:'noa',emoji:'🌸',name:'Noa',dob:'2009-12-04',gender:'v',weight:50,height:160,activity:2,goal:'gezond',sports:[],allergies:[],prefs:[]},
+  {id:'isa',emoji:'⭐',name:'Isa',dob:'2012-06-08',gender:'v',weight:40,height:150,activity:2,goal:'gezond',sports:[],allergies:['Gluten (coeliakie)'],prefs:[]},
+  {id:'lua',emoji:'🌙',name:'Lua',dob:'2021-08-26',gender:'v',weight:18,height:100,activity:2,goal:'gezond',sports:[],allergies:[],prefs:[]}
+];
+
+// daySchedule[dayIndex][personId] = [sport1, sport2, ...]
+const DEFAULT_SCHEDULE={
+  0:{wim:['Fitness/Kracht']},
+  1:{wim:['Boksen']},
+  2:{},
+  3:{wim:['Boksen']},
+  4:{wim:['Fitness/Kracht']},
+  5:{},
+  6:{wim:['Padel'],mariette:['Padel']}
+};
+
+let profiles=[];
+let daySchedule={};
+let openId=null;
+
+function load(){
+  try{
+    const s=localStorage.getItem('godthelp-profiles');
+    profiles=s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULTS));
+  } catch(e){ profiles=JSON.parse(JSON.stringify(DEFAULTS)); }
+  try{
+    const d=localStorage.getItem('gezinfit-schedule');
+    daySchedule=d?JSON.parse(d):JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+  } catch(e){ daySchedule=JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)); }
+}
+
+function saveProfiles(){ localStorage.setItem('godthelp-profiles',JSON.stringify(profiles)); }
+function saveSchedule(){ localStorage.setItem('gezinfit-schedule',JSON.stringify(daySchedule)); }
+
+function saveAll(){
+  profiles.forEach(p=>{ p.kcalTarget=calcKcal(p); p.protTarget=calcProt(p); });
+  saveProfiles(); saveSchedule();
+  // Sync Wim to main app
+  const wim=profiles.find(p=>p.id==='wim');
+  if(wim){
+    try{
+      const app=JSON.parse(localStorage.getItem('gezinfit-v1')||'{}');
+      app.wimKcal=wim.kcalTarget; app.wimProt=wim.protTarget;
+      localStorage.setItem('gezinfit-v1',JSON.stringify(app));
+    } catch(e){}
+  }
+  const fb=document.getElementById('save-feedback');
+  fb.classList.add('show');
+  setTimeout(()=>fb.classList.remove('show'),2000);
+}
+
+function getP(id){ return profiles.find(p=>p.id===id); }
+function getAge(dob){ if(!dob) return 0; const b=new Date(dob),t=new Date(); let a=t.getFullYear()-b.getFullYear(); if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate())) a--; return a; }
+function calcBMR(p){ const age=getAge(p.dob); if(!p.weight||!p.height||!age) return 1500; return p.gender==='m'?Math.round(10*p.weight+6.25*p.height-5*age+5):Math.round(10*p.weight+6.25*p.height-5*age-161); }
+function calcTDEE(p){ return Math.round(calcBMR(p)*(ACT_FACTOR[p.activity]||1.55)); }
+function calcKcal(p){ const t=calcTDEE(p); if(p.goal==='afvallen') return Math.max(1200,t-300); if(p.goal==='spieren') return t+200; return t; }
+function calcProt(p){ const age=getAge(p.dob); if(age<12) return Math.round(p.weight*1.2); if(age<18) return Math.round(p.weight*1.5); return (p.sports&&p.sports.length>0)?Math.round(p.weight*2.0):Math.round(p.weight*1.6); }
+
+function toggleOpen(id){
+  openId=openId===id?null:id;
+  renderAll();
+}
+
+function toggleTag(id,field,val){
+  const p=getP(id); if(!p) return;
+  const arr=p[field]||[];
+  const i=arr.indexOf(val);
+  if(i>-1) arr.splice(i,1); else arr.push(val);
+  p[field]=arr;
+  saveProfiles();
+  renderAll();
+}
+
+function updateField(id,field,val){
+  const p=getP(id); if(!p) return;
+  if(field==='weight'||field==='height') p[field]=parseFloat(val)||0;
+  else if(field==='activity') p[field]=parseInt(val)||0;
+  else p[field]=val;
+  saveProfiles();
+  // Just update macros box without full re-render
+  const box=document.getElementById('macros-'+id);
+  if(box) box.innerHTML=macrosHTML(p);
+  renderSummary();
+}
+
+function toggleDaySport(dayIdx,personId,sport){
+  if(!daySchedule[dayIdx]) daySchedule[dayIdx]={};
+  const arr=daySchedule[dayIdx][personId]||[];
+  const i=arr.indexOf(sport);
+  if(i>-1) arr.splice(i,1); else arr.push(sport);
+  daySchedule[dayIdx][personId]=arr;
+  saveSchedule();
+  renderDayPlanner();
+  renderSummary();
+}
+
+function macrosHTML(p){
+  const kcal=calcKcal(p),prot=calcProt(p),tdee=calcTDEE(p);
+  return `<div class="macros-title">📊 Berekende dagdoelen</div>
+  <div class="macros-row">
+    <div class="macro-item"><div class="v">${tdee}</div><div class="l">Basis kcal</div></div>
+    <div class="macro-item"><div class="v">${kcal}</div><div class="l">Doel kcal</div></div>
+    <div class="macro-item"><div class="v">${prot}g</div><div class="l">Eiwit doel</div></div>
+  </div>`;
+}
+
+function renderAll(){
+  renderProfiles();
+  renderDayPlanner();
+  renderSummary();
+}
+
+function renderProfiles(){
+  document.getElementById('profiles-container').innerHTML=profiles.map(p=>{
+    const isOpen=openId===p.id;
+    const age=getAge(p.dob);
+    const kcal=calcKcal(p),prot=calcProt(p);
+    const hasAlg=(p.allergies||[]).filter(a=>a!=='Geen').length>0;
+    const hasSports=(p.sports||[]).length>0;
+
+    let body='';
+    if(isOpen){
+      body=`<div class="person-body">
+        <div class="row2">
+          <div class="field"><label>Gewicht (kg)</label><input type="number" step="0.1" value="${p.weight||''}" placeholder="70" oninput="updateField('${p.id}','weight',this.value)"></div>
+          <div class="field"><label>Lengte (cm)</label><input type="number" value="${p.height||''}" placeholder="175" oninput="updateField('${p.id}','height',this.value)"></div>
+        </div>
+        <div class="field"><label>Geboortedatum</label><input type="date" value="${p.dob||''}" onchange="updateField('${p.id}','dob',this.value)"></div>
+        <div class="field"><label>Geslacht</label>
+          <select onchange="updateField('${p.id}','gender',this.value)">
+            <option value="m"${p.gender==='m'?' selected':''}>Man</option>
+            <option value="v"${p.gender==='v'?' selected':''}>Vrouw</option>
+          </select>
+        </div>
+        <div class="field"><label>Activiteitsniveau</label>
+          <select onchange="updateField('${p.id}','activity',this.value)">
+            ${ACTIVITY.map((a,i)=>`<option value="${i}"${p.activity===i?' selected':''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Doel</label>
+          <select onchange="updateField('${p.id}','goal',this.value)">
+            <option value="afvallen"${p.goal==='afvallen'?' selected':''}>Afvallen / vet verliezen</option>
+            <option value="gezond"${p.goal==='gezond'?' selected':''}>Gezond blijven</option>
+            <option value="spieren"${p.goal==='spieren'?' selected':''}>Spieren opbouwen</option>
+          </select>
+        </div>
+        <div class="divider"></div>
+        <div class="field"><label>🏃 Sporten</label>
+          <div class="tags">${SPORTS.map(s=>`<div class="tag${(p.sports||[]).includes(s)?' sel-blue':''}" onclick="toggleTag('${p.id}','sports','${s}')">${SPORT_EMOJI[s]||''} ${s}</div>`).join('')}</div>
+        </div>
+        <div class="divider"></div>
+        <div class="field"><label>🚫 Allergieën & intoleranties</label>
+          <div class="tags">${ALLERGIES.map(a=>`<div class="tag${(p.allergies||[]).includes(a)?' sel-red':''}" onclick="toggleTag('${p.id}','allergies','${a}')">${a}</div>`).join('')}</div>
+        </div>
+        <div class="divider"></div>
+        <div class="field"><label>🥗 Eetvoorkeuren</label>
+          <div class="tags">${PREFS.map(pr=>`<div class="tag${(p.prefs||[]).includes(pr)?' sel-green':''}" onclick="toggleTag('${p.id}','prefs','${pr}')">${pr}</div>`).join('')}</div>
+        </div>
+        <div class="macros-box" id="macros-${p.id}">${macrosHTML(p)}</div>
+      </div>`;
+    }
+
+    return `<div class="person-block${isOpen?' is-open':''}">
+      <div class="person-top" onclick="toggleOpen('${p.id}')">
+        <div class="person-emoji" onclick="event.stopPropagation();showEmojiPicker('${p.id}')" style="cursor:pointer;position:relative" title="Tik om te wijzigen">
+          ${p.emoji}
+          <span style="position:absolute;bottom:-2px;right:-2px;font-size:10px;background:var(--green);color:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;line-height:1">✏️</span>
+        </div>
+        <div class="person-info">
+          <div class="person-name">${p.name}
+            ${hasAlg?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(231,76,60,0.12);color:#C62828;margin-left:5px;font-weight:700">Allergie</span>':''}
+          </div>
+          <div class="person-sub">${age} jaar · ${kcal} kcal/dag · ${prot}g eiwit${hasSports?' · '+(p.sports||[]).map(s=>SPORT_EMOJI[s]||s).join(' '):''}</div>
+        </div>
+        <div class="person-arrow">›</div>
+      </div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
+function renderDayPlanner(){
+  document.getElementById('day-planner-rows').innerHTML=DAYS.map((day,di)=>{
+    const schedule=daySchedule[di]||{};
+    return `<div class="day-row">
+      <div class="day-row-title">
+        ${day}
+        <span class="day-badge ${DAY_BADGES[di]}">${DAY_LABELS[di]}</span>
+      </div>
+      <div class="person-sport-row">
+        ${profiles.map(p=>{
+          const personSports=schedule[p.id]||[];
+          const hasSport=personSports.length>0;
+          return `<div class="sport-chip${hasSport?' active':''}" onclick="showPersonSportModal(${di},'${p.id}','${p.emoji}','${p.name}')">
+            <span class="emoji">${p.emoji}</span>
+            <span>${p.name}</span>
+            ${hasSport?`<span style="font-size:12px">${personSports.map(s=>SPORT_EMOJI[s]||'🏃').join('')}</span>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showPersonSportModal(dayIdx,personId,emoji,name){
+  const p=getP(personId);
+  const personSports=p?p.sports||[]:[];
+  const selected=(daySchedule[dayIdx]||{})[personId]||[];
+  const existing=document.getElementById('sport-modal');
+  if(existing) existing.remove();
+  const overlay=document.createElement('div');
+  overlay.id='sport-modal';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(26,58,38,0.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  overlay.onclick=e=>{if(e.target===overlay) overlay.remove();};
+
+  const allSports=personSports.length>0?personSports:SPORTS.filter(s=>s!=='Geen sport');
+
+  overlay.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:75vh;overflow-y:auto;padding:0 0 30px">
+    <div style="padding:16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:#fff;border-radius:24px 24px 0 0">
+      <span style="font-size:24px">${emoji}</span>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:800;color:var(--text)">${name} op ${DAYS[dayIdx]}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:500">Welke sport doet ${name} vandaag?</div>
+      </div>
+      <button onclick="document.getElementById('sport-modal').remove()" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:14px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Tik om aan/uit te zetten</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        <div class="sport-chip${selected.length===0?' active':''}" onclick="clearDaySport(${dayIdx},'${personId}')" style="border-color:var(--muted2)">
+          😴 Rust dag
+        </div>
+        ${allSports.map(s=>`<div class="sport-chip${selected.includes(s)?' active':''}" onclick="toggleDaySport(${dayIdx},'${personId}','${s}');updateModalChips(${dayIdx},'${personId}')">
+          ${SPORT_EMOJI[s]||''} ${s}
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function updateModalChips(dayIdx,personId){
+  document.getElementById('sport-modal').remove();
+  showPersonSportModal(dayIdx,personId,getP(personId).emoji,getP(personId).name);
+}
+
+function clearDaySport(dayIdx,personId){
+  if(!daySchedule[dayIdx]) daySchedule[dayIdx]={};
+  daySchedule[dayIdx][personId]=[];
+  saveSchedule();
+  renderDayPlanner();
+  document.getElementById('sport-modal').remove();
+}
+
+function renderSummary(){
+  const allAllergies=[...new Set(profiles.flatMap(p=>(p.allergies||[]).filter(a=>a!=='Geen')))];
+  let html='';
+  if(allAllergies.length>0){
+    html+=`<div class="warn-box">⚠️ <strong>Let op bij het koken:</strong> ${allAllergies.join(', ')} — check altijd etiketten van sauzen, bouillon en kant-en-klaarproducten.</div>`;
+  }
+  const totalKcal=profiles.reduce((s,p)=>s+calcKcal(p),0);
+  const totalProt=profiles.reduce((s,p)=>s+calcProt(p),0);
+  html+=`<div class="sum-block">
+    <div class="sum-title">👨‍👩‍👧‍👧 Dagdoelen per persoon</div>
+    ${profiles.map(p=>`<div class="sum-row">
+      <span class="sum-lbl">${p.emoji} ${p.name} (${getAge(p.dob)}j)</span>
+      <span class="sum-val">${calcKcal(p)} kcal · ${calcProt(p)}g eiwit</span>
+    </div>`).join('')}
+    <div class="sum-row" style="border-top:1.5px solid var(--border2);margin-top:5px;padding-top:9px">
+      <span class="sum-lbl" style="font-weight:700;color:var(--text)">Gezinstotaal</span>
+      <span class="sum-val" style="color:var(--green2);font-weight:800;font-size:12px">${totalKcal} kcal · ${totalProt}g eiwit</span>
+    </div>
+  </div>`;
+  if(allAllergies.length>0){
+    html+=`<div class="sum-block">
+      <div class="sum-title">🚫 Allergieën per persoon</div>
+      ${profiles.filter(p=>(p.allergies||[]).filter(a=>a!=='Geen').length>0).map(p=>`<div class="sum-row">
+        <span class="sum-lbl">${p.emoji} ${p.name}</span>
+        <span class="sum-val">${(p.allergies||[]).filter(a=>a!=='Geen').join(', ')}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  html+=`<div class="sum-block">
+    <div class="sum-title">🏃 Sporten per persoon</div>
+    ${profiles.map(p=>`<div class="sum-row">
+      <span class="sum-lbl">${p.emoji} ${p.name}</span>
+      <span class="sum-val">${(p.sports||[]).map(s=>`${SPORT_EMOJI[s]||''} ${s}`).join(', ')||'—'}</span>
+    </div>`).join('')}
+  </div>`;
+  document.getElementById('summary-container').innerHTML=html;
+}
+
+
+const EMOJI_OPTIONS = [
+  '👨','👩','👦','👧','👶','🧑','🧒',
+  '💪','🥊','🎾','⚽','🏃','🚴','🧘',
+  '🌸','⭐','🌙','🌟','🦋','🌺','🍀',
+  '🦁','🐯','🐻','🐼','🐨','🦊','🐸',
+  '🚀','🎯','🏆','💡','🎵','🎨','📚',
+  '🌈','❤️','💚','💙','💛','🧡','💜'
+];
+
+function showEmojiPicker(personId){
+  const existing = document.getElementById('emoji-picker');
+  if(existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'emoji-picker';
+  overlay.className = 'emoji-picker-overlay';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="emoji-picker-sheet">
+    <div class="emoji-picker-head">
+      <div class="emoji-picker-title">Kies een icoontje</div>
+      <button onclick="document.getElementById('emoji-picker').remove()" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div class="emoji-grid">
+      ${EMOJI_OPTIONS.map(e=>`<div class="emoji-opt" onclick="selectEmoji('${personId}','${e}')">${e}</div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function selectEmoji(personId, emoji){
+  const p = getP(personId);
+  if(p){ p.emoji = emoji; saveProfiles(); }
+  document.getElementById('emoji-picker').remove();
+  renderAll();
+}
+
+load();
+renderAll();
+</script>
+</body>
+</html>
