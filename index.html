@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2ECC71">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gezinfit">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Gezinfit</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+<style>
+html{overflow-x:hidden;width:100%;position:relative}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+body{overflow-x:hidden;width:100%;max-width:100vw;position:relative;min-height:100vh}
+:root{
+  --bg:#F0FBF4;--surf:#fff;--surf2:#E8F8EE;--surf3:#D4F0DF;
+  --border:rgba(39,174,96,0.15);--border2:rgba(39,174,96,0.3);
+  --text:#1A3A26;--muted:#6B9E7A;--muted2:#A8CDB5;
+  --green:#2ECC71;--green2:#27AE60;--green3:#1AAF5D;
+  --boks:#6C63FF;--danger:#E74C3C;--amber:#F39C12;
+  --r:16px;--rsm:10px;
+  --shadow:0 4px 20px rgba(46,204,113,0.15);
+  --shadow-sm:0 2px 10px rgba(0,0,0,0.07);
+  --shadow-card:0 3px 14px rgba(39,174,96,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100dvh}
+.header{padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 14px;background:linear-gradient(135deg,#2ECC71,#27AE60,#1AAF5D);flex-shrink:0;box-shadow:0 4px 20px rgba(46,204,113,0.35)}
+.header-row{display:flex;align-items:center;justify-content:space-between}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(255,255,255,0.35);flex-shrink:0}
+.logo-text{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.logo-text span{color:rgba(255,255,255,0.72)}
+.logo-sub{font-size:10px;color:rgba(255,255,255,0.75);margin-top:1px;font-weight:500}
+.hdr-btn{background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);border-radius:10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.navbar{display:flex;background:#fff;border-bottom:1.5px solid var(--border);flex-shrink:0;box-shadow:var(--shadow-sm)}
+.nav-btn{flex:1;padding:10px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;color:var(--muted2);cursor:pointer;border:none;background:transparent;font-weight:600}
+.nav-btn.active{color:var(--green2)}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.day-tabs{background:#fff;padding:9px 12px 0;border-bottom:1.5px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tabs-inner{display:flex;gap:5px;width:max-content;padding-bottom:9px}
+.dtab{padding:7px 15px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid transparent;color:var(--muted);cursor:pointer;background:transparent;white-space:nowrap;transition:.2s}
+.dtab.active{color:#fff;border-color:var(--green);background:var(--green);box-shadow:0 3px 10px rgba(46,204,113,0.4)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 40px;background:var(--bg)}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-card)}
+.card.open{border-color:var(--green)}
+.card-head{padding:13px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card-title{font-size:14px;font-weight:700;line-height:1.3;flex:1;color:var(--text)}
+.chevron{color:var(--muted2);font-size:16px;transition:transform .25s;line-height:1}
+.card.open .chevron{transform:rotate(90deg);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.ck{background:#EEF0FF;color:#5C6BC0}.cp{background:#E8F8EE;color:var(--green2)}
+.ct{background:#F5F5F0;color:#9B7B5A}.clc{background:#FFF8E1;color:#F57F17}
+.cgv{background:#E8F5E9;color:#388E3C}.cvote{background:#E8F8EE;color:var(--green2);font-weight:700}
+.card-body{display:none;padding:0 14px 14px}
+.card.open .card-body{display:block}
+.sec-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);margin:12px 0 7px}
+.portions-row{display:flex;align-items:center;gap:10px;background:var(--surf2);border-radius:var(--rsm);padding:8px 12px;border:1px solid var(--border);margin-bottom:8px}
+.portions-lbl{font-size:12px;color:var(--muted);flex:1;font-weight:500}
+.portions-val{font-size:18px;font-weight:800;color:var(--green2);min-width:24px;text-align:center}
+.port-btn{background:var(--green);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;cursor:pointer;flex-shrink:0}
+.macro-bar{display:flex;gap:6px;margin-bottom:8px}
+.mbar-item{flex:1;background:linear-gradient(135deg,var(--surf2),var(--surf3));border-radius:var(--rsm);padding:7px 6px;text-align:center;border:1px solid var(--border)}
+.mbar-val{font-size:14px;font-weight:800;color:var(--green2)}
+.mbar-lbl{font-size:9px;color:var(--muted);margin-top:1px;font-weight:500}
+.ing-list{display:flex;flex-direction:column}
+.ing-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.ing-row:last-child{border:none}
+.ing-name{color:var(--text);flex:1;font-size:13px}
+.ing-amount{color:var(--muted);font-size:12px;font-weight:600;margin-left:8px}
+.steps{display:flex;flex-direction:column;gap:9px}
+.step{display:flex;gap:9px;font-size:13px;line-height:1.6;color:var(--text)}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px}
+.tip-box{background:linear-gradient(135deg,#FFFDE7,#FFF9C4);border:1.5px solid #FFE082;border-radius:var(--rsm);padding:9px 12px;font-size:12px;color:#5D4037;line-height:1.6;margin-top:12px;font-weight:500}
+.gv-banner{background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1.5px solid #A5D6A7;border-radius:var(--rsm);padding:7px 11px;font-size:11px;color:#2E7D32;margin-bottom:12px;font-weight:600}
+.vote-btn{width:100%;padding:12px;border-radius:var(--rsm);background:linear-gradient(135deg,#FFE082,#FFD54F);border:none;color:#5D4037;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(255,213,79,0.4);margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.winner-banner{background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:2px solid var(--green);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.uieten-row{display:flex;gap:8px;margin-bottom:12px}
+.uieten-btn{flex:1;padding:9px;border-radius:var(--rsm);border:1.5px solid var(--border2);background:#fff;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
+.uieten-btn.active{border-color:var(--green);background:linear-gradient(135deg,#E8F8EE,#D4F0DF);color:var(--green2)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-head h2{font-size:18px;font-weight:800;color:var(--text)}
+.grocery-section{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-card)}
+.grocery-head{padding:11px 14px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.grocery-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+.grocery-item:last-child{border:none}
+.grocery-item.done .grocery-name{text-decoration:line-through;color:var(--muted2)}
+.grocery-name{flex:1}.grocery-amount{color:var(--muted);font-size:12px;font-weight:600}
+.clear-btn{background:none;border:1.5px solid var(--border2);border-radius:var(--rsm);padding:5px 10px;color:var(--muted);font-size:11px;cursor:pointer;font-weight:600}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted2)}
+.empty-state .icon{font-size:44px;margin-bottom:14px}
+.empty-state p{font-size:13px;line-height:1.7;color:var(--muted)}
+.form-section{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--shadow-card)}
+.form-title{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field select,.field textarea{width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit;font-weight:500}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--green)}
+.field textarea{min-height:70px;resize:vertical;line-height:1.5}
+.ing-form-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.ing-form-row input{flex:1;min-width:0}
+.ing-form-row input.sm{width:70px;flex:none}
+.remove-ing{background:none;border:none;color:var(--danger);font-size:18px;cursor:pointer;flex-shrink:0}
+.day-checks{display:flex;flex-wrap:wrap;gap:6px}
+.day-check{display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;font-weight:500}
+.day-check input{accent-color:var(--green)}
+.submit-btn{width:100%;padding:13px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px;box-shadow:0 4px 15px rgba(46,204,113,0.4)}
+.add-ing-btn{background:none;border:1.5px dashed var(--border2);border-radius:var(--rsm);width:100%;padding:7px;color:var(--muted);font-size:12px;cursor:pointer;margin-bottom:8px;font-weight:600}
+.toggle-row{display:flex;background:var(--surf2);border-radius:20px;padding:3px}
+.toggle-opt{flex:1;padding:6px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);border-radius:17px;cursor:pointer}
+.toggle-opt.active{background:#fff;color:var(--text);box-shadow:var(--shadow-sm)}
+.loading-bar{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surf2);border-radius:var(--rsm);margin-top:10px;font-size:13px;color:var(--muted);font-weight:500}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* DAG */
+.person-dag-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow-card)}
+.person-dag-card.open{border-color:var(--green)}
+.person-dag-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.person-dag-emoji{width:34px;height:34px;border-radius:50%;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.person-dag-info{flex:1}
+.person-dag-name{font-size:14px;font-weight:700;color:var(--text)}
+.person-dag-sub{font-size:11px;color:var(--muted);margin-top:1px;font-weight:500}
+.person-dag-right{text-align:right;flex-shrink:0}
+.person-dag-kcal{font-size:15px;font-weight:800}
+.person-dag-kcal.ok{color:var(--green2)}.person-dag-kcal.warn{color:var(--amber)}.person-dag-kcal.over{color:var(--danger)}
+.person-dag-body{display:none;padding:10px 14px;border-top:1px solid var(--border)}
+.person-dag-card.open .person-dag-body{display:block}
+.prog-wrap{padding:4px 14px 8px}
+.prog-bar{height:6px;background:var(--surf3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#2ECC71,#27AE60);transition:.4s;max-width:100%}
+.prog-fill.warn{background:linear-gradient(90deg,#F39C12,#E67E22)}.prog-fill.over{background:linear-gradient(90deg,#E74C3C,#C0392B)}
+.moment-block{background:var(--surf2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px;border:1px solid var(--border)}
+.moment-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.moment-label{font-size:12px;font-weight:700;color:var(--text)}
+.moment-kcal{font-size:11px;font-weight:700;color:var(--green2)}
+.moment-items{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.moment-item{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 8px;background:#fff;border-radius:6px}
+.moment-item-name{flex:1;font-weight:500;color:var(--text)}
+.moment-item-macros{font-size:10px;color:var(--muted);font-weight:600}
+.moment-item-del{background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:0;flex-shrink:0}
+.moment-add-row{display:flex;gap:5px;flex-wrap:wrap}
+.m-add-btn{display:flex;align-items:center;gap:3px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid var(--border2);background:#fff;color:var(--muted);cursor:pointer;white-space:nowrap}
+.m-add-btn.g{border-color:var(--green);background:rgba(46,204,113,0.08);color:var(--green2)}
+.m-add-btn.p{border-color:var(--boks);background:rgba(108,99,255,0.08);color:var(--boks)}
+.quick-form{background:#fff;border-radius:var(--rsm);padding:9px;margin-top:7px;border:1px solid var(--border2)}
+.quick-row{display:flex;gap:5px;margin-bottom:6px}
+.quick-row input{flex:1;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:7px 9px;color:var(--text);font-size:12px;font-family:inherit;font-weight:500}
+.quick-row input.sm{width:65px;flex:none}
+.quick-save{padding:7px 12px;border-radius:var(--rsm);background:var(--green);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.dag-top{background:linear-gradient(135deg,var(--surf2),var(--surf3));border-radius:var(--rsm);padding:10px 12px;margin-bottom:12px;border:1.5px solid var(--border)}
+.dag-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.dag-top-title{font-size:13px;font-weight:700;color:var(--text)}
+.dag-totals{display:flex;gap:7px}
+.dag-total{flex:1;background:#fff;border-radius:8px;padding:6px 8px;text-align:center;border:1px solid var(--border)}
+.dag-total .v{font-size:14px;font-weight:800;color:var(--green2)}
+.dag-total .l{font-size:9px;color:var(--muted);font-weight:600}
+.toggle-sw{width:40px;height:22px;border-radius:11px;background:var(--surf3);border:none;cursor:pointer;position:relative;transition:.2s;flex-shrink:0}
+.toggle-sw.on{background:var(--green)}
+.toggle-sw::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.toggle-sw.on::after{left:20px}
+/* SCANNER */
+.scanner-overlay{position:fixed;inset:0;background:#000;z-index:2000;display:flex;flex-direction:column}
+.scanner-header{padding:52px 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.scanner-title{font-size:16px;font-weight:800;color:#fff}
+.scanner-close{background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:24px;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.scanner-viewport{flex:1;position:relative;overflow:hidden}
+.scanner-viewport video{width:100%;height:100%;object-fit:cover}
+.scanner-line{position:absolute;left:10%;right:10%;height:2px;background:var(--green);box-shadow:0 0 8px rgba(46,204,113,0.8);animation:scanline 2s ease-in-out infinite;top:50%}
+@keyframes scanline{0%,100%{transform:translateY(-60px)}50%{transform:translateY(60px)}}
+.scanner-frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.scanner-box{width:240px;height:160px;border:2px solid rgba(46,204,113,0.8);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+.scanner-hint{position:absolute;bottom:0;left:0;right:0;padding:16px;text-align:center;color:rgba(255,255,255,0.85);font-size:13px;font-weight:500;background:linear-gradient(transparent,rgba(0,0,0,0.7))}
+.scanner-result{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;padding:18px;transform:translateY(100%);transition:.3s;max-height:70vh;overflow-y:auto}
+.scanner-result.show{transform:translateY(0)}
+.scanner-macros{display:flex;gap:7px;margin:10px 0}
+.scanner-macro{flex:1;background:var(--surf2);border-radius:var(--rsm);padding:7px;text-align:center}
+.scanner-macro .v{font-size:15px;font-weight:800;color:var(--green2)}
+.scanner-macro .l{font-size:9px;color:var(--muted);font-weight:600}
+.scanner-person-btns{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.scanner-person-btn{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);background:#fff;color:var(--muted);cursor:pointer}
+.scanner-person-btn.sel{border-color:var(--green);background:var(--green);color:#fff}
+.scanner-add-btn{width:100%;padding:12px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px}
+/* AUTH */
+.auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#2ECC71,#27AE60,#1AAF5D);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:5000;overflow-y:auto}
+.auth-card{background:#fff;border-radius:24px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.auth-tabs{display:flex;background:var(--surf2);border-radius:12px;padding:3px;margin-bottom:20px}
+.auth-tab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;color:var(--muted);border-radius:10px;cursor:pointer;transition:.2s}
+.auth-tab.active{background:#fff;color:var(--text);box-shadow:var(--shadow-sm)}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.auth-field input{width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:12px 14px;color:var(--text);font-size:15px;font-family:inherit;font-weight:500}
+.auth-field input:focus{outline:none;border-color:var(--green)}
+.auth-btn{width:100%;padding:14px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:4px;box-shadow:0 4px 15px rgba(46,204,113,0.4)}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed}
+.auth-error{background:#FFEBEE;border:1px solid #FFCDD2;border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:#C62828;margin-bottom:12px;font-weight:500;display:none}
+.auth-error.show{display:block}
+/* SETUP */
+.setup-screen{position:fixed;inset:0;background:linear-gradient(135deg,#2ECC71,#27AE60);display:flex;flex-direction:column;align-items:center;padding:60px 24px 40px;z-index:4000;overflow-y:auto}
+.setup-card{background:#fff;border-radius:24px;padding:20px;width:100%;max-width:400px;margin-bottom:16px}
+.setup-member-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;background:var(--surf2);border-radius:14px;padding:10px 12px}
+.setup-emoji-btn{width:40px;height:40px;border-radius:50%;background:#fff;border:1.5px solid var(--border2);font-size:20px;cursor:pointer;flex-shrink:0}
+.setup-fields{flex:1;display:flex;flex-direction:column;gap:6px}
+.setup-name-input{width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;font-size:14px;font-weight:600;color:var(--text);font-family:inherit}
+.setup-dob-input{width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:var(--rsm);padding:8px 11px;font-size:12px;color:var(--text);font-family:inherit}
+.setup-del{background:none;border:none;color:var(--danger);font-size:20px;cursor:pointer;flex-shrink:0;margin-top:8px}
+.invite-link-box{background:var(--surf2);border-radius:var(--rsm);padding:12px;border:1.5px solid var(--border2);word-break:break-all;font-size:11px;color:var(--text);font-family:monospace;margin:8px 0}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div style="font-size:56px;margin-bottom:16px">🥗</div>
+  <h1 style="font-size:32px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center">Gezinfit</h1>
+  <p style="font-size:15px;color:rgba(255,255,255,0.85);margin-bottom:32px;text-align:center;line-height:1.6">Samen eten · Samen bewegen</p>
+  <div class="auth-card">
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- LOGIN FORM — altijd zichtbaar -->
+    <div id="login-form">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-align:center;margin-bottom:16px;text-transform:uppercase;letter-spacing:.05em">Inloggen</div>
+      <div class="auth-field"><label>E-mailadres</label><input type="email" id="login-email" placeholder="jouw@email.nl" autocomplete="email"></div>
+      <div class="auth-field"><label>Wachtwoord</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="auth-btn" id="login-btn" onclick="doLogin()">Inloggen</button>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6">
+        Nog geen account? Je hebt een <strong>uitnodigingslink</strong> nodig van de hoofdgebruiker van je gezin.
+      </div>
+    </div>
+
+    <!-- REGISTER FORM — alleen zichtbaar via uitnodigingslink -->
+    <div id="register-form" style="display:none">
+      <div style="background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border-radius:var(--rsm);padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">🎉</span>
+        <div><div style="font-size:12px;font-weight:700;color:var(--green2)">Je bent uitgenodigd!</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px">Maak een account aan om mee te doen</div></div>
+      </div>
+      <div class="auth-field"><label>Je naam</label><input type="text" id="reg-name" placeholder="bijv. Wim"></div>
+      <div class="auth-field"><label>E-mailadres</label><input type="email" id="reg-email" placeholder="jouw@email.nl" autocomplete="email"></div>
+      <div class="auth-field"><label>Wachtwoord</label><input type="password" id="reg-password" placeholder="min. 6 tekens" autocomplete="new-password"></div>
+      <button class="auth-btn" id="reg-btn" onclick="doRegister()">Account aanmaken</button>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px">
+        Al een account? <span onclick="showLoginOnly()" style="color:var(--green2);cursor:pointer;font-weight:700">Inloggen</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app" style="display:none">
+  <div class="header">
+    <div class="header-row">
+      <div class="logo-wrap">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+            <circle cx="7.5" cy="6" r="2.5" fill="white"/>
+            <rect x="5" y="9.5" width="5" height="6" rx="1.5" fill="white"/>
+            <circle cx="13" cy="7.5" r="2" fill="rgba(255,255,255,0.85)"/>
+            <rect x="10.5" y="10.5" width="5" height="5" rx="1.5" fill="rgba(255,255,255,0.85)"/>
+            <circle cx="18.5" cy="9" r="1.5" fill="rgba(255,255,255,0.7)"/>
+            <rect x="16.5" y="11" width="4" height="4" rx="1.2" fill="rgba(255,255,255,0.7)"/>
+            <polyline points="3,19 6,19 7.5,16.5 9.5,21 11,17.5 13,19 21,19" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text" id="family-title">Gezin<span>fit</span></div>
+          <div class="logo-sub" id="user-sub">Laden...</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="hdr-btn" onclick="switchTab('settings')">⚙️</button>
+        <button class="hdr-btn" onclick="signOut()">🚪 Uit</button>
+      </div>
+    </div>
+  </div>
+  <div class="navbar">
+    <button class="nav-btn active" id="nav-menu" onclick="switchTab('menu')">
+      <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>Menu
+    </button>
+    <button class="nav-btn" id="nav-menulist" onclick="switchTab('menulist')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Menu's
+    </button>
+    <button class="nav-btn" id="nav-dag" onclick="switchTab('dag')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Dag
+    </button>
+    <button class="nav-btn" id="nav-groceries" onclick="switchTab('groceries')">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>Boodschappen
+    </button>
+    <button class="nav-btn" id="nav-add" onclick="switchTab('add')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>Toevoegen
+    </button>
+  </div>
+  <div id="tab-menu" class="tab-content" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+    <div class="day-tabs"><div class="day-tabs-inner" id="day-tabs-inner"></div></div>
+    <div class="scroll" id="menu-scroll"></div>
+  </div>
+  <div id="tab-menulist" class="tab-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="menulist-scroll" style="padding-top:14px"></div>
+  </div>
+  <div id="tab-dag" class="tab-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="dag-scroll" style="padding-top:14px"></div>
+  </div>
+  <div id="tab-groceries" class="tab-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="groceries-scroll" style="padding-top:14px"></div>
+  </div>
+  <div id="tab-add" class="tab-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="add-scroll" style="padding-top:14px"></div>
+  </div>
+  <div id="tab-settings" class="tab-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="scroll" id="settings-scroll" style="padding-top:14px"></div>
+  </div>
+</div>
+
+<script>
+// SUPABASE
+const SURL='https://ybzwmbygsfutfjjsmwvz.supabase.co';
+const SKEY='sb_publishable_YaJtlQyhmHjLxXFmNydcpg_GAArXmGF';
+const sb=supabase.createClient(SURL,SKEY);
+
+// CONSTANTS
+const DAYS=['Ma','Di','Wo','Do','Vr','Za','Zo'];
+const DAY_NAMES=['Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag','Zondag'];
+const MEAL_MOMENTS=[{key:'ontbijt',label:'🌅 Ontbijt'},{key:'snack1',label:'🍎 Snack ochtend'},{key:'lunch',label:'☀️ Lunch'},{key:'snack2',label:'🍊 Snack middag'},{key:'avond',label:'🍽️ Avondeten'},{key:'snack3',label:'🌙 Snack avond'}];
+const OB_EMOJIS=['💪','👩','🌸','⭐','🌙','👦','👧','🧑','👨','🐯','🦁','🐼'];
+const SPORT_EMOJI={'Fitness/Kracht':'💪','Boksen':'🥊','Padel':'🎾','Voetbal':'⚽','Handbal':'🤾','Zwemmen':'🏊','Hardlopen':'🏃','Wandelen':'🚶','Fietsen':'🚴','Yoga':'🧘','Dans':'💃'};
+
+const DEFAULT_RECIPES=[
+  {name:'Gegrilde kipfilet met zoete aardappel en broccoli',kcal:520,prot:48,time_min:30,low_carb:false,gv:true,tip:'Maak extra portie kip voor morgen.',ingredients:[['Kipfilet','1 kg'],['Zoete aardappel','750g'],['Broccoli','500g'],['Olijfolie','4 el'],['Knoflook','3 teentjes']],steps:['Verwarm oven 200C. Rooster zoete aardappel 25 min.','Gril kip 6-7 min per kant.','Blancheer broccoli 4 min.'],days:[0]},
+  {name:'Ovenschotel gehakt paprika en aardappel',kcal:550,prot:42,time_min:45,low_carb:false,gv:true,tip:'Check bouillon op gluten.',ingredients:[['Rundergehakt','875g'],['Vastkokende aardappels','875g'],['Paprika','4 st'],['Ui','2 st'],['GV bouillon','300ml']],steps:['Bak gehakt met ui.','Doe in ovenschaal met aardappels en bouillon.','Bak 45 min op 190C.'],days:[0]},
+  {name:'Kippenburrito bowl met rijst en avocado',kcal:510,prot:47,time_min:30,low_carb:false,gv:true,tip:'Ieder bouwt zijn eigen bowl!',ingredients:[['Kipfilet','875g'],['Witte rijst','375g'],['Zwarte bonen','1 blik'],['Avocado','2 st']],steps:['Kook rijst. Bak kipstreepjes.','Verwarm bonen.','Bouw bowl op.'],days:[0]},
+  {name:'Nassi goreng met kip GV',kcal:500,prot:44,time_min:30,low_carb:false,gv:true,tip:'Rijst avond ervoor koken!',ingredients:[['Kipfilet','875g'],['Koude rijst','500g'],['Ei','5 st'],['GV ketjap manis','4 el']],steps:['Bak kip goudbruin.','Voeg rijst toe, eieren erdoor.','GV ketjap erdoor.'],days:[1]},
+  {name:'Gehaktballen in tomatensaus met aardappelpuree',kcal:530,prot:40,time_min:40,low_carb:false,gv:true,tip:'GV paneermeel: Schar.',ingredients:[['Rundergehakt','875g'],['GV paneermeel','4 el'],['Aardappels','1 kg'],['Passata','600ml']],steps:['Rol gehaktballen, bak bruin.','Maak tomatensaus.','Stamp puree.'],days:[1]},
+  {name:'Chili con carne zonder rijst',kcal:440,prot:45,time_min:35,low_carb:true,gv:true,tip:'Geen rijst of brood erbij.',ingredients:[['Rundergehakt','875g'],['Kidneybonen','2 blikken'],['Tomatenblokjes','2 blikken'],['Paprika','2 st']],steps:['Bak gehakt met ui en kruiden.','Voeg tomaten en bonen toe.','20 min sudderen.'],days:[2]},
+  {name:'Gevulde paprikas met gehakt',kcal:420,prot:41,time_min:50,low_carb:true,gv:true,tip:'Iedereen zijn eigen paprika!',ingredients:[['Grote paprikas','6-7 st'],['Rundergehakt','750g'],['Passata','500ml'],['Champignons','250g']],steps:['Maak gehaktvulling.','Vul paprikas.','Bak 45 min op 190C.'],days:[2]},
+  {name:'Varkenshaas met geroosterde groente en aardappels',kcal:490,prot:43,time_min:35,low_carb:false,gv:true,tip:'5 min rusten voor aansnijden.',ingredients:[['Varkenshaas','1 kg'],['Vastkokende aardappels','875g'],['Broccoli','375g']],steps:['Bak varkenshaas rondom bruin, 20 min in oven.','Aardappels meegaren.','Wok broccoli 5 min.'],days:[3]},
+  {name:'Kip tikka masala met rijst',kcal:510,prot:46,time_min:35,low_carb:false,gv:true,tip:'Kruiden altijd checken.',ingredients:[['Kipfilet','1 kg'],['Rijst','375g'],['GV yoghurt','185ml'],['Passata','375ml'],['Garam masala','2 tl']],steps:['Marineer kip 30 min.','Bak aan, voeg passata toe.','20 min sudderen.'],days:[3]},
+  {name:'Gegrilde kip met geroosterde groente en hummus',kcal:420,prot:44,time_min:25,low_carb:true,gv:true,tip:'Hummus is van nature GV.',ingredients:[['Kipfilet','875g'],['Courgette','2 st'],['Paprika','3 st'],['GV hummus','250g']],steps:['Rooster groente 20-25 min.','Gril kip 6-7 min per kant.','Serveer met hummus.'],days:[4]},
+  {name:'Tomatensoep met gehaktballetjes',kcal:380,prot:36,time_min:35,low_carb:true,gv:true,tip:'Kinderen zoeken de balletjes!',ingredients:[['Rundergehakt','625g'],['GV paneermeel','2 el'],['Passata','800ml'],['GV bouillon','600ml']],steps:['Rol kleine balletjes, bak bruin.','Maak tomatensaus.','Balletjes 15 min erin.'],days:[4]},
+  {name:'GV pizza zelfgemaakt',kcal:620,prot:35,time_min:50,low_carb:false,gv:true,tip:'Zelfgemaakt is veel lekkerder!',ingredients:[['GV pizzameel Schar','625g'],['Droge gist','8g'],['Passata','375ml'],['Geraspte kaas GV','250g']],steps:['Maak deeg, laat 30 min rijzen.','Beleg naar wens.','Bak 12-15 min op 230C.'],days:[5]},
+  {name:'Ovenkip met dikke friet',kcal:580,prot:40,time_min:45,low_carb:false,gv:true,tip:'Heinz ketchup is GV.',ingredients:[['Kipdrumsticks','10 st'],['Vastkokende aardappels','1,25 kg'],['Paprikapoeder','2 tl']],steps:['Rooster friet 35-40 min op 220C.','Bak kip met kruiden 35-40 min.','Serveer met GV ketchup.'],days:[5]},
+  {name:'Ovenkip met mediterrane groente en aardappels',kcal:510,prot:46,time_min:55,low_carb:false,gv:true,tip:'Start vroeg na de lunch.',ingredients:[['Kip dijen','1,5 kg'],['Vastkokende aardappels','750g'],['Courgette','2 st'],['Cherrytomaten','300g']],steps:['Snijd groente en aardappels.','Wrijf kip in met kruiden.','Rooster 45-50 min op 200C.'],days:[6]},
+  {name:'Gehakt in tomatensaus met GV tagliatelle',kcal:530,prot:41,time_min:30,low_carb:false,gv:true,tip:'GV pasta van Schar of Rummo.',ingredients:[['Rundergehakt','750g'],['GV tagliatelle','500g'],['Passata','600ml']],steps:['Kook GV pasta al dente.','Maak tomatensaus met gehakt.','Meng pasta door saus.'],days:[6]}
+];
+
+// STATE
+let user=null,family=null,member=null,members=[],recipes=[],votes={},dayLogs={},groceries=[],portions={};
+let openRecipe=null,openTracker=null,openQuickForm={},activeDay=0,activeTab='menu';
+let realtimeCh=null,scanCtx=null,scannedProd=null,scanPersons=[],codeReader=null,_scanLock=false;
+let menuView='all',menuDayFilter=null,setupUser=null,setupCount=2;
+
+
+// AUTH
+function showAuthTab(t){
+  document.getElementById('login-form').style.display=t==='login'?'block':'none';
+  document.getElementById('register-form').style.display=t==='register'?'block':'none';
+  document.getElementById('auth-error').className='auth-error';
+}
+function showLoginOnly(){
+  showAuthTab('login');
+}
+function showErr(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.className='auth-error show';}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-password').value;
+  if(!email||!pw){showErr('Vul alle velden in.');return;}
+  const btn=document.getElementById('login-btn');btn.disabled=true;btn.textContent='Inloggen...';
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Inloggen';return;}
+    if(data?.user){
+      btn.textContent='Laden...';
+      await loadData(data.user);
+    }
+  }catch(e){showErr('Verbindingsfout: '+e.message);btn.disabled=false;btn.textContent='Inloggen';}
+}
+
+async function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pw=document.getElementById('reg-password').value;
+  if(!name||!email||!pw){showErr('Vul alle velden in.');return;}
+  if(pw.length<6){showErr('Wachtwoord minimaal 6 tekens.');return;}
+
+  // Only allow registration via invite link or new family link
+  const params=new URLSearchParams(window.location.search);
+  if(!params.get('invite') && !params.get('newgezin')){
+    showErr('Je hebt een uitnodigingslink nodig om een account aan te maken.');
+    return;
+  }
+  const btn=document.getElementById('reg-btn');btn.disabled=true;btn.textContent='Account aanmaken...';
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{name}}});
+    if(error){showErr(error.message);btn.disabled=false;btn.textContent='Account aanmaken';return;}
+    if(data?.user){
+      const params=new URLSearchParams(window.location.search);
+      const inviteToken=params.get('invite');
+      const newGezin=params.get('newgezin');
+      if(inviteToken) await joinFamily(data.user,name,inviteToken);
+      else showSetup(data.user,name); // newgezin or first user — both go to setup
+    } else {
+      showErr('Account aangemaakt! Controleer je e-mail of log direct in.');
+      btn.disabled=false;btn.textContent='Account aanmaken';
+    }
+  }catch(e){showErr('Fout: '+e.message);btn.disabled=false;btn.textContent='Account aanmaken';}
+}
+
+async function joinFamily(u,name,token){
+  const{data:inv,error:invErr}=await sb.from('invitations').select('*').eq('token',token).eq('used',false).single();
+  if(invErr||!inv){
+    showErr('Uitnodiging ongeldig of al gebruikt. Vraag een nieuwe link aan de hoofdgebruiker.');
+    return;
+  }
+  
+  // Show member picker — who are you in this family?
+  const{data:existing}=await sb.from('family_members')
+    .select('*').eq('family_id',inv.family_id).is('user_id',null);
+  
+  if(!existing||!existing.length){
+    // No unlinked members — add as new member
+    const emoji=OB_EMOJIS[Math.floor(Math.random()*8)];
+    await sb.from('family_members').insert({family_id:inv.family_id,user_id:u.id,name,emoji});
+    await sb.from('invitations').update({used:true}).eq('id',inv.id);
+    window.history.replaceState({},'',window.location.pathname);
+    await loadData(u);
+    return;
+  }
+
+  // Show picker: which family member are you?
+  document.getElementById('auth-screen').style.display='none';
+  const ex=document.getElementById('member-picker');if(ex)ex.remove();
+  const sc=document.createElement('div');sc.id='member-picker';
+  sc.style.cssText='position:fixed;inset:0;background:linear-gradient(135deg,#2ECC71,#27AE60);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:4000;overflow-y:auto';
+  sc.innerHTML=`
+    <div style="font-size:48px;margin-bottom:16px">👋</div>
+    <h1 style="font-size:24px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center">Welkom ${name}!</h1>
+    <p style="font-size:14px;color:rgba(255,255,255,0.9);margin-bottom:28px;text-align:center;line-height:1.6">Wie ben jij in het gezin?</p>
+    <div style="width:100%;max-width:400px">
+      ${existing.map(m=>`
+        <div onclick="linkMember('${m.id}','${inv.id}','${u.id}')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+          <div style="font-size:32px">${m.emoji}</div>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:var(--text)">${m.name}</div>
+            <div style="font-size:12px;color:var(--muted);font-weight:500">${m.dob?'Geboren '+new Date(m.dob).toLocaleDateString('nl-NL'):'Geen geboortedatum'}</div>
+          </div>
+          <div style="font-size:22px;color:var(--green2)">›</div>
+        </div>`).join('')}
+      <div onclick="linkMember('new','${inv.id}','${u.id}')" style="background:rgba(255,255,255,0.2);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:14px;cursor:pointer;border:2px dashed rgba(255,255,255,0.5)">
+        <div style="font-size:32px">➕</div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:700;color:#fff">Ik sta er niet tussen</div><div style="font-size:12px;color:rgba(255,255,255,0.8);font-weight:500">Voeg mij toe als nieuw lid</div></div>
+      </div>
+    </div>
+    <button onclick="document.getElementById('member-picker').remove();signOut()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;font-weight:600;text-decoration:underline;margin-top:8px">Annuleren</button>`;
+  document.body.appendChild(sc);
+  window._pendingInvite = {invId:inv.id, userId:u.id, familyId:inv.family_id, name};
+}
+
+async function linkMember(memberId, invId, userId){
+  const pending = window._pendingInvite;
+  document.getElementById('member-picker')?.remove();
+  if(memberId==='new'){
+    const emoji=OB_EMOJIS[Math.floor(Math.random()*8)];
+    await sb.from('family_members').insert({family_id:pending.familyId,user_id:userId,name:pending.name,emoji});
+  } else {
+    await sb.from('family_members').update({user_id:userId}).eq('id',memberId);
+  }
+  await sb.from('invitations').update({used:true}).eq('id',invId);
+  window.history.replaceState({},'',window.location.pathname);
+  await loadData(user);
+}
+
+
+async function signOut(){
+  if(realtimeCh) sb.removeChannel(realtimeCh);
+  await sb.auth.signOut();
+  user=null;family=null;member=null;members=[];recipes=[];votes={};dayLogs={};
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+}
+
+// SETUP — nieuw gezin
+function showNoAccessScreen(u){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='none';
+  const ex=document.getElementById('no-access-screen');if(ex)ex.remove();
+  const sc=document.createElement('div');sc.id='no-access-screen';
+  sc.style.cssText='position:fixed;inset:0;background:linear-gradient(135deg,#2ECC71,#27AE60);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;z-index:4000';
+  sc.innerHTML=`
+    <div style="font-size:64px;margin-bottom:20px">🔒</div>
+    <h1 style="font-size:26px;font-weight:800;color:#fff;margin-bottom:12px;text-align:center">Geen toegang</h1>
+    <p style="font-size:15px;color:rgba(255,255,255,0.9);margin-bottom:32px;text-align:center;line-height:1.7;max-width:360px">
+      Je hebt een <strong>uitnodigingslink</strong> nodig van de hoofdgebruiker van je gezin om mee te doen met Gezinfit.
+    </p>
+    <div style="background:rgba(255,255,255,0.15);border-radius:16px;padding:20px;width:100%;max-width:400px;border:1.5px solid rgba(255,255,255,0.3);margin-bottom:20px">
+      <div style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:8px">📨 Heb je een uitnodigingslink?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6">Vraag de hoofdgebruiker van je gezin om een uitnodigingslink te sturen via ⚙️ Instellingen → Gezinslid uitnodigen.</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:16px;padding:20px;width:100%;max-width:400px;border:1.5px solid rgba(255,255,255,0.3);margin-bottom:24px">
+      <div style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;margin-bottom:8px">🏠 Nieuw gezin starten?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-bottom:12px;line-height:1.6">Maak een nieuw gezin aan en voeg je gezinsleden toe.</div>
+      <button onclick="document.getElementById('no-access-screen').remove();showSetup(user,user?.user_metadata?.name||'Gebruiker')" style="width:100%;padding:11px;border-radius:10px;background:#fff;border:none;color:var(--green2);font-size:14px;font-weight:800;cursor:pointer">+ Nieuw gezin aanmaken</button>
+    </div>
+    <button onclick="document.getElementById('no-access-screen').remove();signOut()" style="background:none;border:none;color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;font-weight:600;text-decoration:underline">Uitloggen</button>`;
+  document.body.appendChild(sc);
+}
+
+function showSetup(u,name){
+  setupUser=u;setupCount=2;
+  document.getElementById('auth-screen').style.display='none';
+  const sc=document.createElement('div');sc.id='setup-screen';sc.className='setup-screen';
+  sc.innerHTML=`
+    <div style="font-size:48px;margin-bottom:14px">👨‍👩‍👧‍👧</div>
+    <h1 style="font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;text-align:center">Welkom ${name}!</h1>
+    <p style="font-size:14px;color:rgba(255,255,255,0.85);margin-bottom:24px;text-align:center;line-height:1.6">Maak je gezin aan om te beginnen</p>
+    <div class="setup-card">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">Gezinsnaam</div>
+      <input type="text" id="setup-fname" placeholder="bijv. Familie Godthelp" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);font-family:inherit">
+    </div>
+    <div class="setup-card">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px">Gezinsleden</div>
+      <div id="setup-members">
+        ${setupRow(0,'💪',name,'')}
+        ${setupRow(1,'👩','','')}
+      </div>
+      <button onclick="addSetupRow()" style="width:100%;padding:10px;border-radius:var(--rsm);background:none;border:1.5px dashed var(--border2);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;margin-top:4px">+ Gezinslid toevoegen</button>
+    </div>
+    <button onclick="saveSetup()" style="width:100%;padding:14px;border-radius:var(--rsm);background:#fff;border:none;color:var(--green2);font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.15);max-width:400px">✓ Aan de slag met Gezinfit!</button>
+    <p style="font-size:12px;color:rgba(255,255,255,0.7);text-align:center;margin-top:12px">Je kunt dit later aanpassen via Instellingen</p>`;
+  document.body.appendChild(sc);
+}
+
+function setupRow(i,emoji,name,dob){
+  return `<div id="setup-row-${i}" class="setup-member-row">
+    <button class="setup-emoji-btn" id="setup-emoji-${i}" onclick="cycleEmoji(${i})">${emoji}</button>
+    <div class="setup-fields">
+      <input type="text" class="setup-name-input" id="setup-name-${i}" placeholder="Naam" value="${name}">
+      <input type="date" class="setup-dob-input" id="setup-dob-${i}" value="${dob}">
+    </div>
+    ${i>0?`<button class="setup-del" onclick="document.getElementById('setup-row-${i}').remove()">×</button>`:''}
+  </div>`;
+}
+
+function cycleEmoji(i){const b=document.getElementById('setup-emoji-'+i);if(!b)return;const c=OB_EMOJIS.indexOf(b.textContent);b.textContent=OB_EMOJIS[(c+1)%OB_EMOJIS.length];}
+
+function addSetupRow(){
+  const c=document.getElementById('setup-members');const i=setupCount++;
+  const d=document.createElement('div');d.innerHTML=setupRow(i,OB_EMOJIS[i%OB_EMOJIS.length],'','');
+  c.appendChild(d.children[0]);
+}
+
+async function saveSetup(){
+  const fname=document.getElementById('setup-fname')?.value?.trim()||'Mijn Gezin';
+  const mems=[];
+  for(let i=0;i<setupCount;i++){
+    const n=document.getElementById('setup-name-'+i);
+    const e=document.getElementById('setup-emoji-'+i);
+    const d=document.getElementById('setup-dob-'+i);
+    if(n&&n.value.trim()) mems.push({name:n.value.trim(),emoji:e?.textContent||'👤',dob:d?.value||null,is_admin:i===0});
+  }
+  if(!mems.length){alert('Voeg minimaal één gezinslid toe.');return;}
+  const{data:fam,error:fe}=await sb.from('families').insert({name:fname}).select().single();
+  if(fe){alert('Fout: '+fe.message);return;}
+  // Eerste lid = huidige gebruiker met account, rest zonder user_id
+  // Ze kunnen later via uitnodiging inloggen
+  const memberRows = mems.map((m,i)=>({
+    family_id:fam.id,
+    user_id: i===0 ? setupUser.id : null,
+    name:m.name,
+    emoji:m.emoji,
+    dob:m.dob,
+    is_admin: i===0
+  }));
+  await sb.from('family_members').insert(memberRows);
+  await sb.from('recipes').insert(DEFAULT_RECIPES.map(r=>({...r,family_id:fam.id,is_default:true})));
+  document.getElementById('setup-screen')?.remove();
+  await loadData(setupUser);
+}
+
+// LOAD DATA
+async function loadData(u){
+  user=u;
+  const{data:m}=await sb.from('family_members').select('*,families(*)').eq('user_id',u.id).single();
+  if(!m){
+    // Check if this is the first user ever (no families exist yet)
+    // If so, show setup. Otherwise show "need invite" screen.
+    const{data:anyFamily}=await sb.from('families').select('id').limit(1);
+    // New user without family - check if they came from an invite
+    const params=new URLSearchParams(window.location.search);
+    if(params.get('invite')){
+      // They have an invite token but already registered - process it
+      await joinFamily(u, u.user_metadata?.name||'Gebruiker', params.get('invite'));
+      return;
+    }
+    // Show no-access screen with option to create new family
+    showNoAccessScreen(u);
+    return;
+  }
+  member=m;family=m.families;
+  document.getElementById('family-title').innerHTML=family.name+' <span>Menu</span>';
+  document.getElementById('user-sub').textContent=member.emoji+' '+member.name;
+  await Promise.all([loadMembers(),loadRecipes(),loadVotes(),loadDayLogs()]);
+  loadGroceries();
+  setupRealtime();
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  const t=new Date().getDay();activeDay=t===0?6:t-1;
+  switchTab('menu');
+}
+
+async function loadMembers(){const{data}=await sb.from('family_members').select('*').eq('family_id',family.id).order('created_at');members=data||[];}
+async function loadGlobalRecipes(limit=50){
+  try {
+    const{data} = await sb.from('global_recipes')
+      .select('*')
+      .eq('approved', true)
+      .order('times_used', {ascending: false})
+      .limit(limit);
+    return data || [];
+  } catch(e){ return []; }
+}
+
+async function loadRecipes(){const{data}=await sb.from('recipes').select('*').eq('family_id',family.id).order('created_at');recipes=data||[];}
+async function loadVotes(){
+  const today=new Date().toISOString().split('T')[0];
+  const{data}=await sb.from('votes').select('*,family_members(name,emoji)').eq('family_id',family.id).eq('vote_date',today);
+  votes={};(data||[]).forEach(v=>{if(!votes[v.recipe_id])votes[v.recipe_id]=[];votes[v.recipe_id].push({member_id:v.member_id,name:v.family_members?.name,emoji:v.family_members?.emoji});});
+}
+async function loadDayLogs(){
+  const today=new Date().toISOString().split('T')[0];
+  const{data}=await sb.from('day_logs').select('*').eq('family_id',family.id).eq('log_date',today);
+  dayLogs={};(data||[]).forEach(l=>{if(!dayLogs[l.member_id])dayLogs[l.member_id]={};if(!dayLogs[l.member_id][l.meal_type])dayLogs[l.member_id][l.meal_type]=[];dayLogs[l.member_id][l.meal_type].push(l);});
+}
+function loadGroceries(){try{groceries=JSON.parse(localStorage.getItem('gf-groceries-'+(family?.id||''))||'[]');}catch(e){groceries=[];}}
+function saveGroceries(){localStorage.setItem('gf-groceries-'+(family?.id||''),JSON.stringify(groceries));}
+
+function setupRealtime(){
+  if(realtimeCh) sb.removeChannel(realtimeCh);
+  realtimeCh=sb.channel('gf-'+family.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'votes',filter:'family_id=eq.'+family.id},()=>loadVotes().then(()=>{if(activeTab==='menu')renderMenu();}))
+    .on('postgres_changes',{event:'*',schema:'public',table:'day_logs',filter:'family_id=eq.'+family.id},()=>loadDayLogs().then(()=>{if(activeTab==='dag')renderDag();}))
+    .on('postgres_changes',{event:'*',schema:'public',table:'recipes',filter:'family_id=eq.'+family.id},()=>loadRecipes().then(()=>{if(activeTab==='menu')renderMenu();else if(activeTab==='menulist')renderMenuList();}))
+    .subscribe();
+}
+
+
+// SWITCH TAB
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab-content').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
+  const te=document.getElementById('tab-'+tab);if(te){te.style.display='flex';te.style.flexDirection='column';}
+  const ne=document.getElementById('nav-'+tab);if(ne)ne.classList.add('active');
+  if(tab==='menu')renderMenu();
+  else if(tab==='menulist')renderMenuList();
+  else if(tab==='dag')renderDag();
+  else if(tab==='groceries')renderGroceries();
+  else if(tab==='add')renderAddForm();
+  else if(tab==='settings')renderSettings();
+}
+
+function renderDayTabs(){document.getElementById('day-tabs-inner').innerHTML=DAYS.map((d,i)=>`<button class="dtab${i===activeDay?' active':''}" onclick="setDay(${i})">${d}</button>`).join('');}
+function setDay(i){activeDay=i;openRecipe=null;renderMenu();document.getElementById('menu-scroll').scrollTop=0;}
+function scaleAmt(str,p){const f=p/5;if(f===1)return str;return str.replace(/(\d+([.,]\d+)?)/g,m=>{const n=parseFloat(m.replace(',','.'));if(isNaN(n))return m;const s=n*f;const r=Number.isInteger(s)?s:Math.round(s*10)/10;return String(r).replace('.',',');});}
+function getPortion(id){return portions[id]||(members.length||5);}
+function isUitEten(day,type){return localStorage.getItem('ue-'+day+'-'+type+'-'+new Date().toISOString().split('T')[0])==='1';}
+function toggleUitEten(day,type){const k='ue-'+day+'-'+type+'-'+new Date().toISOString().split('T')[0];localStorage.getItem(k)==='1'?localStorage.removeItem(k):localStorage.setItem(k,'1');renderMenu();}
+
+// VOTES
+async function toggleVote(recipeId){
+  const today=new Date().toISOString().split('T')[0];
+  const myVote=(votes[recipeId]||[]).find(v=>v.member_id===member.id);
+  if(myVote){
+    // Stem verwijderen
+    await sb.from('votes').delete().eq('recipe_id',recipeId).eq('member_id',member.id).eq('vote_date',today);
+  } else {
+    // Tel alleen EIGEN actieve stemmen
+    const myTotalVotes = Object.values(votes).flat().filter(v=>v.member_id===member.id).length;
+    if(myTotalVotes >= 2){
+      alert('Je hebt al 2 stemmen. Tik op een ✅ om een stem te verwijderen.');
+      return;
+    }
+    const voteDate=new Date().toISOString().split('T')[0]; await sb.from('votes').insert({family_id:family.id,recipe_id:recipeId,member_id:member.id,vote_date:voteDate});
+  }
+  await loadVotes();
+  const modal=document.getElementById('vote-modal');
+  if(modal)showVoteModal(parseInt(modal.dataset.day||activeDay));
+  else if(activeTab==='menu')renderMenu();
+}
+
+function showVoteModal(day){
+  const dr=recipes.filter(r=>(r.days||[]).includes(day)).slice(0,3);
+  const ex=document.getElementById('vote-modal');if(ex)ex.remove();
+  const ov=document.createElement('div');ov.id='vote-modal';ov.dataset.day=day;
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,58,38,0.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick=e=>{if(e.target===ov){ov.remove();if(activeTab==='menu')renderMenu();}};
+  ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;padding:0 0 40px">
+    <div style="padding:16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;border-radius:24px 24px 0 0">
+      <div><div style="font-size:16px;font-weight:800;color:var(--text)">👍 Wat wil jij vanavond?</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;font-weight:500">Tik op een gerecht om te stemmen</div></div>
+      <button onclick="document.getElementById('vote-modal').remove();if(activeTab==='menu')renderMenu();" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:14px">
+      ${!dr.length?'<div style="text-align:center;padding:20px;color:var(--muted)">Geen recepten voor deze dag</div>':
+        dr.map(r=>{const rv=votes[r.id]||[];const vc=rv.length;const myV=rv.some(v=>v.member_id===member.id);const vnames=rv.map(v=>v.emoji+' '+v.name).join(', ');
+          return `<div onclick="toggleVote('${r.id}')" style="background:${myV?'linear-gradient(135deg,#E8F8EE,#D4F0DF)':'var(--surf2)'};border-radius:var(--r);padding:14px;margin-bottom:12px;border:1.5px solid ${vc>0?'var(--green)':'var(--border)'};cursor:pointer">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+              <div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--text)">${r.name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:500">${r.kcal} kcal · ${r.prot}g · ${r.time_min} min</div>
+              ${vnames?`<div style="font-size:11px;color:var(--green2);margin-top:3px;font-weight:600">${vnames}</div>`:''}</div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                ${vc>0?`<div style="background:var(--green);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px">${vc} stem${vc>1?'men':''}</div>`:''}
+                <div style="font-size:22px">${myV?'✅':'⬜'}</div>
+              </div>
+            </div>
+          </div>`;}).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+// RENDER MENU
+function renderMenu(){
+  renderDayTabs();
+  const day=activeDay;
+  const dr=recipes.filter(r=>(r.days||[]).includes(day));
+  const avgK=members.length?Math.round(members.reduce((s,m)=>s+(m.kcal_target||2000),0)/members.length):2000;
+  const sorted=dr.sort((a,b)=>{const va=(votes[a.id]||[]).length,vb=(votes[b.id]||[]).length;if(vb!==va)return vb-va;return Math.abs((a.kcal||500)-avgK)-Math.abs((b.kcal||500)-avgK);}).slice(0,3);
+  let top=null,tc=0;sorted.forEach(r=>{const c=(votes[r.id]||[]).length;if(c>tc){tc=c;top=r;}});
+  const allVoted=members.every(m=>sorted.some(r=>(votes[r.id]||[]).some(v=>v.member_id===m.id)));
+  const notVoted=members.filter(m=>!sorted.some(r=>(votes[r.id]||[]).some(v=>v.member_id===m.id)));
+  const gvP=members.filter(m=>(m.allergies||[]).includes('Gluten (coeliakie)')).map(m=>m.name);
+  let banner='🌾 Alle recepten glutenvrij';
+  if(gvP.length)banner+=` — veilig voor ${gvP.join(' & ')}`;
+  banner+=` · ${members.length} personen`;
+  const luit=isUitEten(day,'lunch'),auit=isUitEten(day,'avond');
+  let html=`<div style="font-size:22px;font-weight:800;margin-bottom:8px;color:var(--text)">${DAY_NAMES[day]}</div>
+    <div class="uieten-row">
+      <button class="uieten-btn${luit?' active':''}" onclick="toggleUitEten(${day},'lunch')">🍴 Lunch buiten${luit?' ✓':''}</button>
+      <button class="uieten-btn${auit?' active':''}" onclick="toggleUitEten(${day},'avond')">🍽️ Diner buiten${auit?' ✓':''}</button>
+    </div>
+    <div class="gv-banner">${banner}</div>`;
+  if(top&&tc>0){
+    const vn=(votes[top.id]||[]).map(v=>v.emoji+' '+v.name).join(', ');
+    html+=`<div class="winner-banner"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:20px">🏆</span><div><div style="font-size:10px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.05em">Meest gestemd — ${tc} stem${tc>1?'men':''}</div><div style="font-size:14px;font-weight:800;color:var(--text)">${top.name}</div></div></div><div style="font-size:11px;color:var(--muted);font-weight:500">${vn}</div></div>`;
+  }
+  if(!allVoted){
+    const lbl=notVoted.length<members.length?`👍 Nog niet gestemd: ${notVoted.map(m=>m.emoji+' '+m.name).join(', ')}`:'👍 Stem — wat wil jij vanavond?';
+    html+=`<button class="vote-btn" onclick="showVoteModal(${day})">${lbl}</button>`;
+  }
+  html+=`<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">🍽️ Avondmaaltijd</div>`;
+  if(!sorted.length)html+=`<div class="empty-state"><div class="icon">🍽️</div><p>Geen recepten voor deze dag.<br>Voeg recepten toe via het Menu's tabblad.</p></div>`;
+  else sorted.forEach(r=>{html+=renderRecipeCard(r);});
+  const ms=document.getElementById('menu-scroll');if(ms)ms.innerHTML=html;
+}
+
+function renderRecipeCard(r){
+  const isOpen=openRecipe===r.id;const p=getPortion(r.id);
+  const sk=Math.round((r.kcal||0)*p/5);const sp=Math.round((r.prot||0)*p/5);
+  const vc=(votes[r.id]||[]).length;const myV=(votes[r.id]||[]).some(v=>v.member_id===member?.id);
+  const ings=Array.isArray(r.ingredients)?r.ingredients:[];
+  let body='';
+  if(isOpen){
+    body=`<div class="card-body">
+      <div class="sec-lbl">Porties aanpassen</div>
+      <div class="portions-row"><span class="portions-lbl">Aantal personen</span>
+        <button class="port-btn" onclick="portions['${r.id}']=Math.max(1,getPortion('${r.id}')-1);if(activeTab==='menu')renderMenu();">−</button>
+        <span class="portions-val">${p}</span>
+        <button class="port-btn" onclick="portions['${r.id}']=Math.min(12,getPortion('${r.id}')+1);if(activeTab==='menu')renderMenu();">+</button>
+      </div>
+      <div class="macro-bar">
+        <div class="mbar-item"><div class="mbar-val">${sk}</div><div class="mbar-lbl">kcal totaal</div></div>
+        <div class="mbar-item"><div class="mbar-val">${Math.round(sk/p)}</div><div class="mbar-lbl">kcal p.p.</div></div>
+        <div class="mbar-item"><div class="mbar-val">${sp}g</div><div class="mbar-lbl">eiwit totaal</div></div>
+        <div class="mbar-item"><div class="mbar-val">${Math.round(sp/p)}g</div><div class="mbar-lbl">eiwit p.p.</div></div>
+      </div>
+      <div class="sec-lbl">Ingrediënten — ${p} personen</div>
+      <div class="ing-list">${ings.map(ing=>`<div class="ing-row"><span class="ing-name">${ing[0]}</span><span class="ing-amount">${scaleAmt(ing[1]||'',p)}</span></div>`).join('')}</div>
+      <button onclick="addAllGroceries('${r.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:var(--rsm);background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:1.5px solid var(--green);color:var(--green2);font-size:13px;font-weight:700;cursor:pointer">+ Alle ingrediënten naar boodschappenlijst</button>
+      <div class="sec-lbl">Bereiding</div>
+      <div class="steps">${(r.steps||[]).map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><span>${s}</span></div>`).join('')}</div>
+      ${r.tip?`<div class="tip-box">💡 ${r.tip}</div>`:''}
+      <button onclick="addRecipeToDag('${r.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:var(--rsm);background:linear-gradient(135deg,#EDE7F6,#E8EAF6);border:1.5px solid var(--boks);color:var(--boks);font-size:12px;font-weight:700;cursor:pointer">+ Voeg toe aan mijn avondeten</button>
+    </div>`;
+  }
+  return `<div class="card${isOpen?' open':''}" id="rc-${r.id}">
+    <div class="card-head" onclick="openRecipe=openRecipe==='${r.id}'?null:'${r.id}';if(activeTab==='menu')renderMenu();else renderMenuList();">
+      <div style="flex:1"><div class="card-title">${r.name}</div>
+        <div class="chips"><span class="chip ck">${sk} kcal</span><span class="chip cp">${sp}g eiwit</span><span class="chip ct">${r.time_min} min</span>
+          ${r.low_carb?'<span class="chip clc">Low-carb</span>':''}${r.gv?'<span class="chip cgv">GV</span>':''}
+          ${vc>0?`<span class="chip cvote">👍 ${vc}${myV?' (jij)':''}</span>`:''}
+        </div>
+      </div>
+      <span class="chevron">›</span>
+    </div>
+    ${body}
+  </div>`;
+}
+
+// MENU LIST
+function renderMenuList(){
+  let html=`<div class="section-head"><h2>📋 Alle menu's</h2><span style="font-size:12px;color:var(--muted);font-weight:600">${recipes.length} recepten</span></div>
+    <div style="display:flex;background:var(--surf2);border-radius:20px;padding:3px;margin-bottom:14px">
+      <button onclick="menuView='all';renderMenuList()" style="flex:1;padding:8px;border-radius:17px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:${menuView==='all'?'#fff':'transparent'};color:${menuView==='all'?'var(--text)':'var(--muted)'}">📋 Alle recepten</button>
+      <button onclick="menuView='days';renderMenuList()" style="flex:1;padding:8px;border-radius:17px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:${menuView==='days'?'#fff':'transparent'};color:${menuView==='days'?'var(--text)':'var(--muted)'}">📅 Per dag indelen</button>
+    </div>`;
+
+  if(menuView==='all'){
+    // ALLE RECEPTEN — volledig openklappend
+    html+=`<input type="text" id="recipe-search" placeholder="🔍 Zoek recept..." oninput="filterR(this.value)" style="width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;margin-bottom:12px;box-shadow:var(--shadow-sm)">`;
+    html+=`<div id="recipe-list">${renderRecipeListFull(recipes)}</div>`;
+  } else {
+    // PER DAG — indelen en beheren
+    [0,1,2,3,4,5,6].forEach(d=>{
+      const dr=recipes.filter(r=>(r.days||[]).includes(d));
+      html+=`<div style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div><div style="font-size:15px;font-weight:800;color:var(--text)">${DAY_NAMES[d]}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500">${dr.length} recept${dr.length!==1?'en':''}</div></div>
+        </div>`;
+      if(!dr.length){
+        html+=`<div style="padding:12px;background:var(--surf2);border-radius:var(--rsm);text-align:center;color:var(--muted2);font-size:12px;font-style:italic">Nog geen recepten voor deze dag</div>`;
+      } else {
+        dr.slice(0,3).forEach(r=>{
+          const vc=(votes[r.id]||[]).length;
+          const p=getPortion(r.id);
+          html+=`<div class="card${openRecipe===r.id?' open':''}" style="margin-bottom:7px" id="rc-ml-${r.id}">
+            <div class="card-head" onclick="openRecipe=openRecipe==='${r.id}'?null:'${r.id}';renderMenuList()">
+              <div style="flex:1"><div class="card-title">${r.name}</div>
+              <div class="chips"><span class="chip ck">${r.kcal} kcal</span><span class="chip cp">${r.prot}g</span><span class="chip ct">${r.time_min} min</span>${vc>0?`<span class="chip cvote">👍 ${vc}</span>`:''}</div></div>
+              <div style="display:flex;gap:5px;align-items:center">
+                <button onclick="event.stopPropagation();showDayModal('${r.id}')" style="padding:5px 10px;border-radius:20px;background:var(--surf2);border:1.5px solid var(--border2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer">📅 Dag</button>
+                <span class="chevron">›</span>
+              </div>
+            </div>
+            ${openRecipe===r.id?`<div class="card-body" style="display:block;padding:0 14px 14px">
+              <div class="portions-row"><span class="portions-lbl">Aantal personen</span>
+                <button class="port-btn" onclick="portions['${r.id}']=Math.max(1,getPortion('${r.id}')-1);renderMenuList()">−</button>
+                <span class="portions-val">${p}</span>
+                <button class="port-btn" onclick="portions['${r.id}']=Math.min(12,getPortion('${r.id}')+1);renderMenuList()">+</button>
+              </div>
+              <div class="sec-lbl">Ingrediënten — ${p} personen</div>
+              <div class="ing-list">${(Array.isArray(r.ingredients)?r.ingredients:[]).map(ing=>`<div class="ing-row"><span class="ing-name">${ing[0]}</span><span class="ing-amount">${scaleAmt(ing[1]||'',p)}</span></div>`).join('')}</div>
+              <button onclick="addAllGroceries('${r.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:var(--rsm);background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:1.5px solid var(--green);color:var(--green2);font-size:13px;font-weight:700;cursor:pointer">🛒 Naar boodschappenlijst</button>
+              <div class="sec-lbl">Bereiding</div>
+              <div class="steps">${(r.steps||[]).map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><span>${s}</span></div>`).join('')}</div>
+              ${r.tip?`<div class="tip-box">💡 ${r.tip}</div>`:''}
+            </div>`:''}
+          </div>`;
+        });
+      }
+      html+=`</div>`;
+    });
+  }
+  const ms=document.getElementById('menulist-scroll');if(ms)ms.innerHTML=html;
+}
+
+function renderRecipeListFull(list){
+  if(!list.length)return`<div class="empty-state"><div class="icon">🍽️</div><p>Nog geen recepten.</p></div>`;
+  return list.map(r=>{
+    const vc=(votes[r.id]||[]).length;
+    const p=getPortion(r.id);
+    const days=(r.days||[]);
+    const isOpen=openRecipe===r.id;
+    return`<div class="card${isOpen?' open':''}" style="margin-bottom:8px" id="rc-all-${r.id}">
+      <div class="card-head" onclick="openRecipe=openRecipe==='${r.id}'?null:'${r.id}';renderMenuList()">
+        <div style="flex:1">
+          <div class="card-title">${r.name}</div>
+          <div class="chips">
+            <span class="chip ck">${r.kcal} kcal</span>
+            <span class="chip cp">${r.prot}g eiwit</span>
+            <span class="chip ct">${r.time_min} min</span>
+            ${r.low_carb?'<span class="chip clc">Low-carb</span>':''}
+            ${r.gv?'<span class="chip cgv">GV</span>':''}
+            ${vc>0?`<span class="chip cvote">👍 ${vc}</span>`:''}
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+            ${days.length?days.map(d=>`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surf2);color:var(--muted);font-weight:600">${DAY_NAMES[d]}</span>`).join(''):`<span style="font-size:10px;color:var(--muted2);font-style:italic">Nog niet ingepland</span>`}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+          <span class="chevron">›</span>
+          <button onclick="event.stopPropagation();showDayModal('${r.id}')" style="padding:4px 10px;border-radius:20px;background:var(--surf2);border:1.5px solid var(--border2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer">📅 Dag</button>
+          ${!r.is_default?`<button onclick="event.stopPropagation();deleteRecipe('${r.id}')" style="padding:4px 10px;border-radius:20px;background:none;border:1.5px solid var(--danger);color:var(--danger);font-size:10px;font-weight:600;cursor:pointer">Verwijder</button>`:''}
+        </div>
+      </div>
+      ${isOpen?`<div class="card-body" style="display:block;padding:0 14px 14px">
+        <div class="portions-row"><span class="portions-lbl">Aantal personen</span>
+          <button class="port-btn" onclick="portions['${r.id}']=Math.max(1,getPortion('${r.id}')-1);renderMenuList()">−</button>
+          <span class="portions-val">${p}</span>
+          <button class="port-btn" onclick="portions['${r.id}']=Math.min(12,getPortion('${r.id}')+1);renderMenuList()">+</button>
+        </div>
+        <div class="sec-lbl">Ingrediënten — ${p} personen</div>
+        <div class="ing-list">${(Array.isArray(r.ingredients)?r.ingredients:[]).map(ing=>`<div class="ing-row"><span class="ing-name">${ing[0]}</span><span class="ing-amount">${scaleAmt(ing[1]||'',p)}</span></div>`).join('')}</div>
+        <button onclick="addAllGroceries('${r.id}')" style="width:100%;margin-top:10px;padding:9px;border-radius:var(--rsm);background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:1.5px solid var(--green);color:var(--green2);font-size:13px;font-weight:700;cursor:pointer">🛒 Naar boodschappenlijst</button>
+        <div class="sec-lbl">Bereiding</div>
+        <div class="steps">${(r.steps||[]).map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><span>${s}</span></div>`).join('')}</div>
+        ${r.tip?`<div class="tip-box">💡 ${r.tip}</div>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function getAdvice(r){
+  if(r.low_carb)return{label:'⚡ Ideaal op rustdag',color:'#F57F17',bg:'#FFF8E1'};
+  if((r.kcal||0)>550)return{label:'💪 Perfect na training',color:'var(--green2)',bg:'#E8F8EE'};
+  if((r.kcal||0)>480)return{label:'🥊 Goed op sportdag',color:'var(--boks)',bg:'#EDE7F6'};
+  if((r.time_min||0)>40)return{label:'🎉 Weekend gerecht',color:'var(--danger)',bg:'#FFEBEE'};
+  return{label:'⚡ Licht & snel',color:'var(--green2)',bg:'#E8F8EE'};
+}
+
+function renderRecipeList(list){
+  if(!list.length)return`<div class="empty-state"><div class="icon">🍽️</div><p>Geen recepten gevonden.</p></div>`;
+  return list.map(r=>{const vc=(votes[r.id]||[]).length;const adv=getAdvice(r);const days=(r.days||[]);
+    return`<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${r.name}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500;margin-bottom:5px">${r.kcal} kcal · ${r.prot}g · ${r.time_min} min${r.low_carb?' · Low-carb':''}${r.gv?' · GV':''}</div>
+          <div style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;background:${adv.bg};font-size:10px;font-weight:700;color:${adv.color};margin-bottom:5px">${adv.label}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${days.map(d=>`<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surf2);color:var(--muted);font-weight:600">${DAY_NAMES[d]}</span>`).join('')}</div>
+          ${vc>0?`<div style="font-size:10px;color:var(--green2);font-weight:700;margin-top:4px">👍 ${vc} stem${vc>1?'men':''}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+          <button onclick="showDayModal('${r.id}')" style="padding:5px 10px;border-radius:20px;background:var(--surf2);border:1.5px solid var(--border2);color:var(--muted);font-size:10px;font-weight:600;cursor:pointer">📅 Dag</button>
+          ${!r.is_default?`<button onclick="deleteRecipe('${r.id}')" style="padding:5px 10px;border-radius:20px;background:none;border:1.5px solid var(--danger);color:var(--danger);font-size:10px;font-weight:600;cursor:pointer">Verwijder</button>`:''}
+        </div>
+      </div>
+    </div></div>`;}).join('');
+}
+
+function filterR(val){const f=recipes.filter(r=>r.name.toLowerCase().includes(val.toLowerCase()));const el=document.getElementById('recipe-list');if(el)el.innerHTML=renderRecipeList(f);}
+
+function showDayModal(rid){
+  const r=recipes.find(rec=>rec.id===rid);if(!r)return;
+  const ex=document.getElementById('day-modal');if(ex)ex.remove();
+  window._sd=[...(r.days||[])];
+  const adv=getAdvice(r);
+  const ov=document.createElement('div');ov.id='day-modal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,58,38,0.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;padding:0 0 30px">
+    <div style="padding:16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;border-radius:24px 24px 0 0">
+      <div><div style="font-size:15px;font-weight:800;color:var(--text)">📅 Dag instellen</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${r.name}</div></div>
+      <button onclick="document.getElementById('day-modal').remove()" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:14px">
+      <div style="background:${adv.bg};border-radius:var(--rsm);padding:10px 12px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:${adv.color};margin-bottom:2px">🤖 App aanbeveling</div>
+        <div style="font-size:12px;color:var(--text);font-weight:500">${adv.label}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+        ${DAYS.map((d,i)=>`<button onclick="toggleDP(${i})" id="dp-${i}" style="padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ${window._sd.includes(i)?'var(--green)':'var(--border2)'};background:${window._sd.includes(i)?'var(--green)':'#fff'};color:${window._sd.includes(i)?'#fff':'var(--muted)'};cursor:pointer">${d}</button>`).join('')}
+      </div>
+      <button onclick="saveDayChange('${rid}')" style="width:100%;padding:13px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer">✓ Opslaan</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function toggleDP(i){const arr=window._sd||[];const idx=arr.indexOf(i);if(idx>-1)arr.splice(idx,1);else arr.push(i);window._sd=arr;
+  DAYS.forEach((_,j)=>{const b=document.getElementById('dp-'+j);if(!b)return;b.style.borderColor=arr.includes(j)?'var(--green)':'var(--border2)';b.style.background=arr.includes(j)?'var(--green)':'#fff';b.style.color=arr.includes(j)?'#fff':'var(--muted)';});}
+
+async function saveDayChange(rid){
+  const days=window._sd||[];if(!days.length){alert('Selecteer minimaal één dag.');return;}
+  await sb.from('recipes').update({days}).eq('id',rid);
+  document.getElementById('day-modal')?.remove();await loadRecipes();renderMenuList();
+}
+
+
+// GROCERIES
+function addAllGroceries(rid){
+  const r=recipes.find(rec=>rec.id===rid);if(!r)return;const p=getPortion(rid);
+  const ings=Array.isArray(r.ingredients)?r.ingredients:[];
+  ings.forEach((ing,i)=>{const s=scaleAmt(ing[1]||'',p);if(!groceries.find(g=>g.rid===rid&&g.i===i))groceries.push({rid,i,name:ing[0],amount:s,done:false,id:Date.now()+'-'+i});});
+  saveGroceries();alert('Toegevoegd aan boodschappenlijst!');switchTab('groceries');
+}
+function renderGroceries(){
+  loadGroceries();const items=groceries;
+  let html=`<div class="section-head"><h2>🛒 Boodschappen</h2>${items.length?`<button class="clear-btn" onclick="groceries=groceries.filter(g=>!g.done);saveGroceries();renderGroceries()">Verwijder afgevinkt</button>`:''}</div>`;
+  if(!items.length){html+=`<div class="empty-state"><div class="icon">🛒</div><p>Nog geen boodschappen.</p></div>`;}
+  else{
+    const grp={};items.forEach(g=>{const r=recipes.find(rec=>rec.id===g.rid);const l=r?r.name:'Overig';if(!grp[l])grp[l]=[];grp[l].push(g);});
+    Object.entries(grp).forEach(([l,gi])=>{html+=`<div class="grocery-section"><div class="grocery-head"><span>${l}</span><button class="clear-btn" onclick="groceries=groceries.filter(g=>g.rid!=='${gi[0].rid}');saveGroceries();renderGroceries()">Verwijder</button></div>
+      ${gi.map(g=>`<div class="grocery-item${g.done?' done':''}" onclick="const x=groceries.find(gg=>gg.id==='${g.id}');if(x){x.done=!x.done;saveGroceries();renderGroceries();}"><div style="width:20px;height:20px;border-radius:6px;border:2px solid var(--border2);background:${g.done?'var(--green)':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${g.done?'<span style="color:#fff;font-size:11px;font-weight:800">✓</span>':''}</div><span class="grocery-name">${g.name}</span><span class="grocery-amount">${g.amount}</span></div>`).join('')}
+    </div>`;});
+  }
+  document.getElementById('groceries-scroll').innerHTML=html;
+}
+
+// DAG TRACKER
+function calcTotal(mid, dateKey=null){const today=dateKey||new Date().toISOString().split('T')[0];const logs=dayLogs[mid]||{};let k=0,p=0;Object.values(logs).forEach(items=>items.filter(i=>!dateKey||i.date===today).forEach(i=>{k+=i.kcal||0;p+=i.prot||0;}));return{kcal:k,prot:p};}
+function isTracking(mid){return localStorage.getItem('tracking-'+mid)!=='false';}
+function toggleTracking(mid){localStorage.setItem('tracking-'+mid,isTracking(mid)?'false':'true');renderDag();}
+
+async function addLogItem(mid,mealType,name,kcal,prot){
+  await sb.from('day_logs').insert({family_id:family.id,member_id:mid,meal_type:mealType,food_name:name,kcal:parseInt(kcal)||0,prot:parseFloat(prot)||0});
+  await loadDayLogs();openQuickForm={};renderDag();
+}
+async function skipMeal(memberId, mealKey){
+  const today = new Date().toISOString().split('T')[0];
+  if(!dayLogs[memberId]) dayLogs[memberId]={};
+  // Toggle skip
+  const skipKey = mealKey+'_skipped';
+  dayLogs[memberId][skipKey] = !dayLogs[memberId][skipKey];
+  renderDag();
+}
+
+async function removeLogItem(id){await sb.from('day_logs').delete().eq('id',id);await loadDayLogs();renderDag();}
+async function addRecipeToDag(rid){
+  const r=recipes.find(rec=>rec.id===rid);if(!r)return;const p=getPortion(rid);
+  await addLogItem(member.id,'avond',r.name,Math.round((r.kcal||0)*p/5),Math.round((r.prot||0)*p/5));
+  alert('Toegevoegd aan jouw avondeten!');
+}
+
+let _dagOffset = 0; // 0 = today, -1 = yesterday, etc.
+
+function renderDag(){
+  const today=new Date();
+  today.setDate(today.getDate()+_dagOffset);
+  const ds=today.toLocaleDateString('nl-NL',{weekday:'long',day:'numeric',month:'long'});
+  const dateKey=today.toISOString().split('T')[0];
+  const isToday=_dagOffset===0;
+  const fk=members.reduce((s,m)=>s+calcTotal(m.id,dateKey).kcal,0);const fg=members.reduce((s,m)=>s+(m.kcal_target||2000),0);
+  let html=`<div class="dag-top"><div class="dag-top-row">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="_dagOffset--;renderDag()" style="background:none;border:1.5px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:16px;cursor:pointer;color:var(--muted)">‹</button>
+      <div class="dag-top-title">📅 ${ds.charAt(0).toUpperCase()+ds.slice(1)}${isToday?' <span style="font-size:11px;background:var(--green);color:#fff;padding:2px 7px;border-radius:10px;vertical-align:middle">vandaag</span>':''}</div>
+      <button onclick="_dagOffset=Math.min(0,_dagOffset+1);renderDag()" style="background:none;border:1.5px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:16px;cursor:pointer;color:${_dagOffset<0?'var(--muted)':'#ccc'}">${_dagOffset<0?'›':'›'}</button>
+    </div>
+    <button onclick="openScanner({type:'dag',mealType:'snack1'})" style="background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;border-radius:20px;padding:5px 11px;color:#fff;font-size:11px;font-weight:700;cursor:pointer">📷 Scan</button>
+  </div><div class="dag-totals">
+    <div class="dag-total"><div class="v">${fk}</div><div class="l">Gegeten gezin</div></div>
+    <div class="dag-total"><div class="v">${Math.max(0,fg-fk)}</div><div class="l">Nog over</div></div>
+  </div></div>`;
+
+  members.forEach(m=>{
+    const tracking=isTracking(m.id);const tot=calcTotal(m.id);
+    const kg=m.kcal_target||2000;const pg=m.prot_target||100;
+    const kl=kg-tot.kcal;const pct=Math.min(100,Math.round(tot.kcal/kg*100));
+    const over=tot.kcal>kg;const warn=pct>85&&!over;const isOpen=openTracker===m.id;const mine=m.id===member?.id;
+    html+=`<div class="person-dag-card${isOpen?' open':''}">
+      <div class="person-dag-head" onclick="openTracker=openTracker==='${m.id}'?null:'${m.id}';renderDag()">
+        <div class="person-dag-emoji">${m.emoji}</div>
+        <div class="person-dag-info"><div class="person-dag-name">${m.name}${mine?' <span style="font-size:9px;background:var(--green);color:#fff;padding:1px 6px;border-radius:10px;font-weight:700">Jij</span>':''}</div>
+        <div class="person-dag-sub">${tracking?`${kg} kcal · ${pg}g eiwit doel`:'Tracking uit'}</div></div>
+        <div class="person-dag-right"><div class="person-dag-kcal ${over?'over':warn?'warn':'ok'}">${tot.kcal} kcal</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:500">${over?'⚠️ '+Math.abs(kl)+' te veel':kl+' over'}</div>
+        <div style="font-size:10px;color:var(--muted);font-weight:500">${tot.prot}g / ${pg}g eiwit</div></div>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar"><div class="prog-fill${over?' over':warn?' warn':''}" style="width:${pct}%"></div></div></div>`;
+    if(isOpen){
+      html+=`<div class="person-dag-body">${mine?`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;color:var(--muted);font-weight:500">Tracking bijhouden</span><button class="toggle-sw${tracking?' on':''}" onclick="toggleTracking('${m.id}')"></button></div>`:''}`;
+      if(tracking){
+        const ml=dayLogs[m.id]||{};
+        MEAL_MOMENTS.forEach(mo=>{
+          const items=ml[mo.key]||[];const mk=items.reduce((s,i)=>s+(i.kcal||0),0);const mp=items.reduce((s,i)=>s+(i.prot||0),0);
+          const qk=m.id+'-'+mo.key;const qo=openQuickForm[qk];
+          html+=`<div class="moment-block"><div class="moment-head-row"><span class="moment-label">${mo.label}</span>${(ml[mo.key+'_skipped'])?"<span style='font-size:10px;color:#aaa;font-style:italic'>overgeslagen</span>":mk>0?`<span class="moment-kcal">${mk} kcal · ${mp}g</span>`:''}</div>
+            ${items.length?`<div class="moment-items">${items.map(it=>`<div class="moment-item"><span class="moment-item-name">${it.food_name}</span><span class="moment-item-macros">${it.kcal} kcal · ${it.prot}g</span>${mine?`<button class="moment-item-del" onclick="removeLogItem('${it.id}')">×</button>`:''}</div>`).join('')}</div>`:''}
+            ${mine?`<div class="moment-add-row">
+              <button class="m-add-btn g" onclick="openScanner({type:'dag',personId:'${m.id}',mealType:'${mo.key}'})">📷 Scan</button>
+              <button class="m-add-btn" style="border-color:var(--amber);background:rgba(243,156,18,0.08);color:var(--amber)" onclick="openQuickForm['${qk}']=!openQuickForm['${qk}'];renderDag()">✏️ Handmatig</button>
+              <button class="m-add-btn p" onclick="showMenuPicker('${m.id}','${mo.key}')">🍽️ Menu</button>
+              <button class="m-add-btn" style="border-color:#ccc;color:#aaa" onclick="skipMeal('${m.id}','${mo.key}')">⏭️ Sla over</button>
+            </div>
+            ${qo?`<div class="quick-form"><div class="quick-row"><input id="${qk}-n" placeholder="Product" type="text"></div>
+              <div class="quick-row"><input id="${qk}-k" placeholder="kcal" type="number" class="sm"><input id="${qk}-p" placeholder="eiwit g" type="number" class="sm"><button class="quick-save" onclick="quickAdd('${m.id}','${mo.key}','${qk}')">+</button></div>
+            </div>`:''}`:
+            `<div style="font-size:11px;color:var(--muted2);font-style:italic;padding:4px 0">Alleen ${m.name} kan hier iets toevoegen</div>`}
+          </div>`;
+        });
+      }
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  });
+  document.getElementById('dag-scroll').innerHTML=html;
+}
+
+async function quickAdd(mid,mealType,qk){
+  const n=document.getElementById(qk+'-n')?.value?.trim();const k=parseInt(document.getElementById(qk+'-k')?.value)||0;const p=parseFloat(document.getElementById(qk+'-p')?.value)||0;
+  if(!n){alert('Vul een naam in.');return;}await addLogItem(mid,mealType,n,k,p);
+}
+
+function showMenuPicker(mid,mealType){
+  const dr=recipes.filter(r=>(r.days||[]).includes(activeDay));const mem=members.find(m=>m.id===mid);
+  const ex=document.getElementById('mp-modal');if(ex)ex.remove();
+  const ov=document.createElement('div');ov.id='mp-modal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(26,58,38,0.6);z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const ml=MEAL_MOMENTS.find(m=>m.key===mealType)?.label||mealType;
+  ov.innerHTML=`<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:600px;max-height:70vh;overflow-y:auto;padding:0 0 30px">
+    <div style="padding:14px 16px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:#fff;border-radius:24px 24px 0 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:800;color:var(--text)">${mem?.emoji} ${mem?.name} — ${ml}</div>
+      <button onclick="document.getElementById('mp-modal').remove()" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="padding:14px">
+      ${dr.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Recepten van vandaag</div>
+        ${dr.map(r=>`<div style="background:var(--surf2);border-radius:var(--rsm);padding:11px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)">
+          <div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--text)">${r.name}</div><div style="font-size:11px;color:var(--muted);font-weight:500;margin-top:2px">${r.kcal} kcal · ${r.prot}g p.p.</div></div>
+          <button onclick="addLogItem('${mid}','${mealType}','${r.name.replace(/'/g,"\\'")}',${r.kcal},${r.prot});document.getElementById('mp-modal').remove()" style="padding:7px 14px;border-radius:20px;background:var(--green);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer">+ Voeg toe</button>
+        </div>`).join('')}`:''}
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 8px">Alle recepten</div>
+      ${recipes.slice(0,10).map(r=>`<div style="background:#fff;border-radius:var(--rsm);padding:9px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;border:1.5px solid var(--border)">
+        <div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text)">${r.name}</div><div style="font-size:10px;color:var(--muted);font-weight:500;margin-top:2px">${r.kcal} kcal · ${r.prot}g p.p.</div></div>
+        <button onclick="addLogItem('${mid}','${mealType}','${r.name.replace(/'/g,"\\'")}',${r.kcal},${r.prot});document.getElementById('mp-modal').remove()" style="padding:6px 12px;border-radius:20px;background:var(--green);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer">+</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+
+// ADD RECIPE
+function renderAddForm(){
+  document.getElementById('add-scroll').innerHTML=`
+    <div class="section-head"><h2>+ Recept toevoegen</h2></div>
+
+    <!-- AI IMPORT SECTIE -->
+    <div style="background:linear-gradient(135deg,#1A3A26,#27AE60);border-radius:var(--r);padding:16px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px">🤖 Slim importeren via AI</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:14px;line-height:1.5">Beschrijf een recept, plak een link of maak een foto van een recept — AI zet het automatisch om</div>
+      
+      <!-- Tabs -->
+      <div style="display:flex;background:rgba(255,255,255,0.15);border-radius:20px;padding:3px;margin-bottom:14px">
+        <button onclick="setImportTab('tekst')" id="itab-tekst" style="flex:1;padding:7px;border-radius:17px;font-size:11px;font-weight:700;border:none;background:#fff;color:var(--text);cursor:pointer">✏️ Beschrijf</button>
+        <button onclick="setImportTab('url')" id="itab-url" style="flex:1;padding:7px;border-radius:17px;font-size:11px;font-weight:700;border:none;background:transparent;color:rgba(255,255,255,0.8);cursor:pointer">🔗 URL</button>
+        <button onclick="setImportTab('foto')" id="itab-foto" style="flex:1;padding:7px;border-radius:17px;font-size:11px;font-weight:700;border:none;background:transparent;color:rgba(255,255,255,0.8);cursor:pointer">📷 Foto</button>
+      </div>
+
+      <!-- Tab: Tekst -->
+      <div id="import-tab-tekst">
+        <textarea id="import-tekst" placeholder="bijv. 'Maak een glutenvrije lasagne voor 5 personen' of plak de tekst van een recept..." style="width:100%;background:rgba(255,255,255,0.95);border:none;border-radius:var(--rsm);padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;min-height:90px;resize:none"></textarea>
+      </div>
+
+      <!-- Tab: URL -->
+      <div id="import-tab-url" style="display:none">
+        <input type="url" id="import-url" placeholder="https://www.leukerecepten.nl/..." style="width:100%;background:rgba(255,255,255,0.95);border:none;border-radius:var(--rsm);padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;margin-bottom:8px">
+        <div style="font-size:11px;color:rgba(255,255,255,0.7);line-height:1.5">Tip: kopieer ook de tekst van de receptpagina en plak die in het "Beschrijf" tabblad voor het beste resultaat</div>
+      </div>
+
+      <!-- Tab: Foto -->
+      <div id="import-tab-foto" style="display:none">
+        <div style="background:rgba(255,255,255,0.1);border:2px dashed rgba(255,255,255,0.4);border-radius:var(--rsm);padding:20px;text-align:center;margin-bottom:8px;cursor:pointer" onclick="document.getElementById('foto-input').click()">
+          <div style="font-size:32px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;color:#fff;font-weight:600">Tik om een foto te kiezen</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px">Foto van recept, tijdschrift of scherm</div>
+        </div>
+        <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoImport(this)">
+        <div id="foto-preview" style="display:none;margin-bottom:8px">
+          <img id="foto-img" style="width:100%;border-radius:var(--rsm);max-height:200px;object-fit:cover">
+        </div>
+      </div>
+
+      <button onclick="doSmartImport()" style="width:100%;margin-top:12px;padding:12px;border-radius:var(--rsm);background:#fff;border:none;color:var(--green2);font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,0.2)">✨ Importeer met AI</button>
+      <div id="import-status" style="margin-top:8px"></div>
+    </div>
+    <div class="form-section">
+      <div class="form-title">Basisinformatie</div>
+      <div class="field"><label>Naam</label><input type="text" id="f-name" placeholder="bijv. Lasagne GV"></div>
+      <div class="field"><label>Bereidingstijd (min)</label><input type="number" id="f-time" placeholder="30"></div>
+      <div class="field"><label>Dag(en)</label><div class="day-checks">${DAYS.map((d,i)=>`<label class="day-check"><input type="checkbox" name="fdays" value="${i}"> ${d}</label>`).join('')}</div></div>
+      <div class="field"><label>Type</label><div class="toggle-row"><div class="toggle-opt active" id="tog-n" onclick="setType('n')">Normaal</div><div class="toggle-opt" id="tog-lc" onclick="setType('lc')">Low-carb</div></div></div>
+    </div>
+    <div class="form-section">
+      <div class="form-title">Voedingswaarden (per portie)</div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label>Calorieën</label><input type="number" id="f-kcal" placeholder="500"></div>
+        <div class="field" style="flex:1"><label>Eiwitten (g)</label><input type="number" id="f-prot" placeholder="40"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-title">Ingrediënten (voor ${members.length||5} personen)</div>
+      <div id="ing-fields">${[0,1,2].map(i=>ingRow(i)).join('')}</div>
+      <button class="add-ing-btn" onclick="addIngRow()">+ Ingrediënt toevoegen</button>
+    </div>
+    <div class="form-section">
+      <div class="form-title">Bereiding & tip</div>
+      <div class="field"><label>Stappen (één per regel)</label><textarea id="f-steps" placeholder="Verwarm de oven..."></textarea></div>
+      <div class="field"><label>Tip</label><input type="text" id="f-tip" placeholder="bijv. Check de saus op gluten"></div>
+      <div class="field"><label>Glutenvrij?</label><div class="toggle-row"><div class="toggle-opt active" id="tog-gv-ja" onclick="setGV(true)">Ja</div><div class="toggle-opt" id="tog-gv-nee" onclick="setGV(false)">Niet zeker</div></div></div>
+    </div>
+    <button class="submit-btn" onclick="submitRecipe()">✓ Opslaan</button><div style="height:20px"></div>`;
+  window._ft='n';window._fgv=true;window._ic=3;
+}
+function ingRow(i){return`<div class="ing-form-row" id="ing-row-${i}"><input type="text" placeholder="Ingrediënt" id="ing-name-${i}"><input type="text" class="sm" placeholder="Hoev." id="ing-amount-${i}"><button class="remove-ing" onclick="document.getElementById('ing-row-${i}').remove()">×</button></div>`;}
+function addIngRow(){const i=window._ic++;const d=document.createElement('div');d.innerHTML=ingRow(i);document.getElementById('ing-fields').appendChild(d.children[0]);}
+function setType(t){window._ft=t;document.getElementById('tog-n').className='toggle-opt'+(t==='n'?' active':'');document.getElementById('tog-lc').className='toggle-opt'+(t==='lc'?' active':'');}
+function setGV(v){window._fgv=v;document.getElementById('tog-gv-ja').className='toggle-opt'+(v?' active':'');document.getElementById('tog-gv-nee').className='toggle-opt'+(!v?' active':'');}
+
+async function submitRecipe(){
+  const name=document.getElementById('f-name').value.trim();
+  const tm=parseInt(document.getElementById('f-time').value)||30;
+  const kcal=parseInt(document.getElementById('f-kcal').value)||0;
+  const prot=parseInt(document.getElementById('f-prot').value)||0;
+  const tip=document.getElementById('f-tip').value.trim()||'';
+  const steps=document.getElementById('f-steps').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  const days=[...document.querySelectorAll('input[name="fdays"]:checked')].map(el=>parseInt(el.value));
+  if(!name){alert('Vul een naam in.');return;}if(!days.length){alert('Selecteer minimaal één dag.');return;}
+  const ingredients=[];for(let i=0;i<window._ic;i++){const n=document.getElementById('ing-name-'+i);const a=document.getElementById('ing-amount-'+i);if(n&&n.value.trim())ingredients.push([n.value.trim(),a?a.value.trim():'']);}
+  const{error}=await sb.from('recipes').insert({family_id:family.id,name,kcal,prot,time_min:tm,tip,steps,ingredients,days,low_carb:window._ft==='lc',gv:window._fgv,created_by:user.id});
+  if(error){alert('Fout: '+error.message);return;}await loadRecipes();alert('"'+name+'" opgeslagen!');renderAddForm();
+}
+
+async function deleteRecipe(id){if(!confirm('Verwijderen?'))return;await sb.from('recipes').delete().eq('id',id);await loadRecipes();renderMenuList();}
+
+
+let _importTab = 'tekst';
+let _fotoBase64 = null;
+
+function setImportTab(tab){
+  _importTab = tab;
+  ['tekst','url','foto'].forEach(t => {
+    const el = document.getElementById('import-tab-'+t);
+    const btn = document.getElementById('itab-'+t);
+    if(el) el.style.display = t===tab ? 'block' : 'none';
+    if(btn){
+      btn.style.background = t===tab ? '#fff' : 'transparent';
+      btn.style.color = t===tab ? 'var(--text)' : 'rgba(255,255,255,0.8)';
+    }
+  });
+}
+
+function handleFotoImport(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Resize image to max 1200px and compress to stay under 5MB
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 800;
+      let w = img.width, h = img.height;
+      if(w > h){ h = Math.round(h*maxSize/w); w = maxSize; }
+      else { w = Math.round(w*maxSize/h); h = maxSize; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.5);
+      _fotoBase64 = compressed.split(',')[1];
+      const preview = document.getElementById('foto-preview');
+      const previewImg = document.getElementById('foto-img');
+      if(preview) preview.style.display = 'block';
+      if(previewImg) previewImg.src = compressed;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function doSmartImport(){
+  const apiKey = localStorage.getItem('gf-apikey');
+  if(!apiKey){ alert('Vul eerst je API key in via Instellingen.'); switchTab('settings'); return; }
+  
+  const st = document.getElementById('import-status');
+  if(st) st.innerHTML = '<div class="loading-bar"><div class="spinner"></div>AI verwerkt je recept...</div>';
+
+  const numPersons = members.length || 5;
+  const allergyList = [...new Set(members.flatMap(m=>(m.allergies||[]).filter(a=>a!=='Geen')))];
+  
+  const prefList = [...new Set(members.flatMap(m=>(m.prefs||[])))];
+  const gvPersons = members.filter(m=>(m.allergies||[]).includes('Gluten (coeliakie)')).map(m=>m.name);
+  
+  const aanpassingen = [];
+  if(allergyList.includes('Gluten (coeliakie)') || gvPersons.length > 0){
+    aanpassingen.push('VERPLICHT glutenvrij maken: vervang alle gluten ingrediënten (pasta→GV pasta Schär, bloem→rijstmeel of maizena, paneermeel→GV paneermeel, sojasaus→tamari, bouillon→GV bouillon)');
+  }
+  if(allergyList.includes('Lactose')) aanpassingen.push('lactosevrij maken: vervang melk→havermelk, boter→olijfolie, kaas→lactosevrije kaas');
+  if(allergyList.includes('Noten')) aanpassingen.push('alle noten weglaten of vervangen');
+  if(allergyList.includes('Vis')) aanpassingen.push('vis weglaten of vervangen door kip of tofu');
+  if(prefList.includes('Geen vis')) aanpassingen.push('geen vis gebruiken');
+  if(prefList.includes('Geen vlees')) aanpassingen.push('vlees vervangen door plantaardige alternatieven');
+  if(prefList.includes('Vegetarisch')) aanpassingen.push('volledig vegetarisch maken');
+
+  const basePrompt = `Maak van dit recept een aangepast JSON recept voor ${numPersons} personen.
+
+VERPLICHTE AANPASSINGEN VOOR DIT GEZIN:
+${aanpassingen.length ? aanpassingen.map((a,i)=>(i+1)+'. '+a).join('\n') : '- Geen speciale aanpassingen nodig'}
+
+GEZIN PROFIEL:
+- ${numPersons} personen
+- Gemiddeld calorie doel: ${Math.round(members.reduce((s,m)=>s+(m.kcal_target||2000),0)/Math.max(members.length,1))} kcal per persoon
+${gvPersons.length ? '- Glutenvrij verplicht voor: '+gvPersons.join(', ') : ''}
+
+Pas het recept AAN zodat het veilig is voor iedereen in het gezin.
+Schaal ingrediënten voor ${numPersons} personen.
+Vertaal alles naar Nederlands.
+
+Geef ALLEEN dit JSON terug, geen uitleg, geen markdown:
+{"name":"naam recept","time_min":30,"kcal":450,"prot":35,"low_carb":false,"gv":${allergyList.includes('Gluten (coeliakie)') || gvPersons.length > 0},"tip":"tip over het recept of GV aanpassing","days":[0],"ingredients":[["Ingrediënt","hoeveelheid"]],"steps":["Stap 1","Stap 2"]}
+
+Days: 0=ma 1=di 2=wo 3=do 4=vr 5=za 6=zo.`;
+
+  let messages = [];
+  
+  try {
+    if(_importTab === 'foto' && _fotoBase64){
+      messages = [{role:'user', content:[
+        {type:'image', source:{type:'base64', media_type:'image/jpeg', data:_fotoBase64}},
+        {type:'text', text: basePrompt}
+      ]}];
+    } else if(_importTab === 'url'){
+      const url = document.getElementById('import-url')?.value?.trim();
+      if(!url){ alert('Vul een URL in.'); if(st) st.innerHTML=''; return; }
+      messages = [{role:'user', content: `Haal het recept op van deze URL: ${url}
+
+${basePrompt}`}];
+    } else {
+      const tekst = document.getElementById('import-tekst')?.value?.trim();
+      if(!tekst){ alert('Beschrijf een recept of plak de recepttekst.'); if(st) st.innerHTML=''; return; }
+      messages = [{role:'user', content: `${tekst}
+
+${basePrompt}`}];
+    }
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5', max_tokens:2000, messages})
+    });
+    
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error?.message||'API fout');
+    const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const jm = text.match(/\{[\s\S]*\}/);
+    if(!jm) throw new Error('Geen recept herkend — probeer meer details toe te voegen');
+    const recipe = JSON.parse(jm[0]);
+    
+    await sb.from('recipes').insert({family_id:family.id,...recipe,created_by:user.id});
+    await loadRecipes();
+    
+    const savedRecipe = recipes.find(rec=>rec.name===recipe.name);
+    const rid = savedRecipe?.id || '';
+    if(st) st.innerHTML = `<div style="background:rgba(255,255,255,0.15);border-radius:var(--rsm);padding:12px;margin-top:4px">
+      <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">✅ "\${recipe.name}" opgeslagen!</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-bottom:10px">\${recipe.kcal} kcal · \${recipe.prot}g eiwit · \${recipe.time_min} min</div>
+      <button onclick="switchTab('menulist')" style="width:100%;padding:9px;border-radius:var(--rsm);background:#fff;border:none;color:var(--green2);font-size:12px;font-weight:700;cursor:pointer">📋 Bekijk in Menu's →</button>
+    </div>`;
+    
+    // Reset
+    _fotoBase64 = null;
+    if(document.getElementById('import-tekst')) document.getElementById('import-tekst').value = '';
+    if(document.getElementById('import-url')) document.getElementById('import-url').value = '';
+    if(document.getElementById('foto-preview')) document.getElementById('foto-preview').style.display = 'none';
+    
+  } catch(e){
+    if(st) st.innerHTML = `<div style="background:rgba(231,76,60,0.3);border-radius:var(--rsm);padding:10px;margin-top:4px;font-size:12px;color:#fff;font-weight:600">❌ ${e.message}</div>`;
+  }
+}
+
+async function doImport(){
+  const url=document.getElementById('import-url')?.value?.trim();const st=document.getElementById('import-status');
+  if(!url){alert('Vul een URL in.');return;}
+  const apiKey=localStorage.getItem('gf-apikey');
+  if(!apiKey){alert('Vul eerst je API key in via Instellingen.');switchTab('settings');return;}
+  if(st)st.innerHTML='<div class="loading-bar"><div class="spinner"></div>Recept wordt geïmporteerd...</div>';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,
+        messages:[{role:'user',content:`Ik geef je een recept URL. Bezoek de pagina en haal het recept op. URL: ${url}
+
+Geef ALLEEN dit JSON terug, geen uitleg, geen markdown:
+{"name":"recept naam","time_min":30,"kcal":450,"prot":35,"low_carb":false,"gv":true,"tip":"handige tip","days":[0],"ingredients":[["Ingrediënt","hoeveelheid voor 5 personen"]],"steps":["Stap 1","Stap 2"]}
+
+Days: 0=ma 1=di 2=wo 3=do 4=vr 5=za 6=zo.
+Schaal ingrediënten voor 5 personen.
+Vertaal alles naar Nederlands.
+Controleer of het glutenvrij (GV) is of maak het GV.`}]})});
+    const data=await resp.json();if(!resp.ok)throw new Error(data.error?.message||'API fout');
+    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const jm=text.match(/\{[\s\S]*\}/);if(!jm)throw new Error('Geen recept gevonden');
+    const recipe=JSON.parse(jm[0]);
+    await sb.from('recipes').insert({family_id:family.id,...recipe,created_by:user.id});
+    await loadRecipes();if(st)st.innerHTML=`<div style="color:var(--green2);font-size:12px;padding:6px 0;font-weight:600">Opgeslagen!</div>`;
+    document.getElementById('import-url').value='';
+  }catch(e){if(st)st.innerHTML=`<div style="color:var(--danger);font-size:12px;padding:6px 0">Fout: ${e.message}</div>`;}
+}
+
+// SETTINGS + PROFILE
+const SPORTS_LIST = ['Fitness/Kracht','Boksen','Padel','Voetbal','Handbal','Basketbal','Tennis','Zwemmen','Hardlopen','Wandelen','Fietsen','Yoga','Dans','Geen sport'];
+const SPORT_EMOJI_MAP2 = {'Fitness/Kracht':'💪','Boksen':'🥊','Padel':'🎾','Voetbal':'⚽','Handbal':'🤾','Basketbal':'🏀','Tennis':'🎾','Zwemmen':'🏊','Hardlopen':'🏃','Wandelen':'🚶','Fietsen':'🚴','Yoga':'🧘','Dans':'💃','Geen sport':'😴'};
+const ALLERGIES_LIST = ['Gluten (coeliakie)','Lactose','Noten','Ei','Soja','Vis','Schaaldieren','Geen'];
+const PREFS_LIST = ['Geen vis','Geen vlees','Vegetarisch','Geen pittig','Geen ui','Geen champignons','Geen knoflook','Geen kaas','Geen eieren'];
+const LIKES_LIST = ['Pasta','Rijst','Vis','Kip','Rood vlees','Soep','Salade','Aziatisch','Italiaans','Mexicaans','Pittig','BBQ','Ovenschotels','Stamppot','Pizza','Wraps'];
+const ACTIVITY_LABELS = ['Weinig actief','Licht actief (1-2x/week)','Matig actief (3-4x/week)','Zeer actief (5+/week)','Topsporter'];
+const ACT_FACTOR = [1.2,1.375,1.55,1.725,1.9];
+
+function calcKcal(m){
+  if(!m.weight||!m.height||!m.dob) return 2000;
+  const age = getAge(m.dob);
+  const bmr = m.gender==='v' ? Math.round(10*m.weight+6.25*m.height-5*age-161) : Math.round(10*m.weight+6.25*m.height-5*age+5);
+  const tdee = Math.round(bmr*(ACT_FACTOR[m.activity||2]||1.55));
+  if(m.goal==='afvallen') return Math.max(1200,tdee-300);
+  if(m.goal==='spieren') return tdee+200;
+  return tdee;
+}
+function calcProt(m){
+  const age = getAge(m.dob||'2000-01-01');
+  if(age<12) return Math.round((m.weight||35)*1.2);
+  if(age<18) return Math.round((m.weight||50)*1.5);
+  return (m.sports||[]).length>0 ? Math.round((m.weight||70)*2.0) : Math.round((m.weight||70)*1.6);
+}
+function getAge(dob){if(!dob)return 30;const b=new Date(dob),t=new Date();let a=t.getFullYear()-b.getFullYear();if(t.getMonth()<b.getMonth()||(t.getMonth()===b.getMonth()&&t.getDate()<b.getDate()))a--;return a;}
+
+function renderSettings(){
+  const ak = localStorage.getItem('gf-apikey')||'';
+  document.getElementById('settings-scroll').innerHTML = `
+    <div class="section-head"><h2>⚙️ Instellingen</h2></div>
+    <div style="background:linear-gradient(135deg,#E8F8EE,#D4F0DF);border:2px solid var(--green);border-radius:var(--r);padding:14px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px">🤖 Slimme recepten genereren</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;font-weight:500">Claude genereert 21 recepten (3 per dag) die perfect passen bij jullie gezin — allergieën, sporten, caloriebehoefte en voorkeuren worden automatisch meegenomen.</div>
+      <button id="refresh-recipes-btn" onclick="refreshRecipes()" style="width:100%;padding:10px;border-radius:var(--rsm);background:var(--surf2);border:1.5px solid var(--border2);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">🔄 Helft wisselen met nieuwe recepten</button>
+      <button id="gen-recipes-btn" onclick="generateRecipes()" style="width:100%;padding:12px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(46,204,113,0.4)">✨ Recepten genereren voor ${family?.name||'ons gezin'}</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;font-weight:500">Vereist Anthropic API key · Duurt ±30 seconden</div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">👤 Mijn profiel</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;margin-bottom:12px">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px">${member?.emoji||'👤'}</div>
+        <div><div style="font-size:15px;font-weight:700;color:var(--text)">${member?.name||''}</div><div style="font-size:12px;color:var(--muted);font-weight:500">${user?.email||''} · Gezin: ${family?.name||''}</div></div>
+      </div>
+      <button onclick="showProfileEditor('${member?.id}')" style="width:100%;padding:11px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer">✏️ Mijn profiel instellen</button>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">👨‍👩‍👧‍👧 Gezinsleden</div>
+      ${members.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div onclick="pickEmoji('${m.id}')" style="font-size:22px;cursor:pointer;background:var(--surf2);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Wijzig emoji">${m.emoji}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${m.name}${m.id===member?.id?' <span style="font-size:10px;background:var(--green);color:#fff;padding:1px 6px;border-radius:10px">Jij</span>':''}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500">${m.kcal_target||2000} kcal · ${m.prot_target||100}g eiwit doel</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:500">${(m.sports||[]).map(s=>SPORT_EMOJI_MAP2[s]||s).join(' ')||'Geen sport ingesteld'}</div>
+        </div>
+        ${(()=>{
+  const myA=getAge(member?.dob||'2000-01-01');
+  const tA=getAge(m.dob||'2000-01-01');
+  const mine=m.id===member?.id;
+  const canE=mine||(myA>=18&&tA<18);
+  return canE
+    ? '<button onclick="showProfileEditor(\''+m.id+'\')" style="padding:6px 12px;border-radius:20px;background:var(--surf2);border:1.5px solid var(--border2);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer">✏️ Profiel</button>'
+    : '<span style="padding:6px 12px;border-radius:20px;background:#f5f5f0;border:1.5px solid var(--border);color:var(--muted2);font-size:11px;font-weight:600">🔒 Privé</span>';
+})()}
+      </div>`).join('')}
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">📨 Uitnodigen</div>
+
+      <!-- Gezinslid uitnodigen -->
+      <div style="background:var(--surf2);border-radius:var(--rsm);padding:12px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">👨‍👩‍👧 Gezinslid uitnodigen</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;font-weight:500">Stuur een link naar een gezinslid — ze maken een account aan en komen automatisch in jouw gezin.</div>
+        <button onclick="genInvite('member')" style="width:100%;padding:10px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer">📨 Link voor gezinslid</button>
+        <div id="invite-member-result"></div>
+      </div>
+
+      <!-- Testgezin uitnodigen -->
+      <div style="background:var(--surf2);border-radius:var(--rsm);padding:12px;border:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🏠 Testgezin uitnodigen</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;font-weight:500">Voor een ander gezin — zij starten hun eigen gezin en komen niet bij jou in.</div>
+        <button onclick="genInvite('family')" style="width:100%;padding:10px;border-radius:var(--rsm);background:linear-gradient(135deg,#6C63FF,#5A52E0);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer">🏠 Link voor nieuw gezin</button>
+        <div id="invite-family-result"></div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">🔑 Anthropic API Key</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;font-weight:500">Nodig voor recepten importeren via URL.</div>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="settings-ak" placeholder="sk-ant-..." value="${ak}" style="flex:1;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:12px;font-family:monospace">
+        <button onclick="localStorage.setItem('gf-apikey',document.getElementById('settings-ak').value.trim());alert('✅ API key opgeslagen!')" style="padding:9px 13px;border-radius:var(--rsm);background:var(--green);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Opslaan</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-title">🚪 Account</div>
+      <button onclick="signOut()" style="width:100%;padding:10px;border-radius:var(--rsm);background:none;border:1.5px solid var(--danger);color:var(--danger);font-size:13px;font-weight:700;cursor:pointer">Uitloggen</button>
+    </div>
+    <div style="text-align:center;padding:20px 0;color:var(--muted2);font-size:11px">Gezinfit · Samen eten · Samen bewegen</div>`;
+}
+
+function showProfileEditor(memberId){
+  const m = members.find(mem=>mem.id===memberId);
+  if(!m) return;
+  // Rechten:
+  // - Eigen profiel: altijd
+  // - Kind (<18): volwassene (18+) mag bewerken
+  // - Andere volwassene: niet toegestaan
+  const myAge = getAge(member?.dob||'2000-01-01');
+  const targetAge = getAge(m.dob||'2000-01-01');
+  const isMine = m.id === member?.id;
+  const imAdult = myAge >= 18;
+  const targetIsKid = targetAge < 18;
+  const canEdit = isMine || (imAdult && targetIsKid);
+  
+  if(!canEdit){
+    alert('Je kunt het profiel van ' + m.name + ' niet bewerken. Alleen ' + m.name + ' zelf kan dat.');
+    return;
+  }
+  const ex = document.getElementById('profile-modal'); if(ex) ex.remove();
+  // Lock body scroll to prevent iOS shake
+  const _sy = window.scrollY;
+  document.body.style.cssText += ';position:fixed;top:-'+_sy+'px;width:100%;overflow:hidden';
+  const ov = document.createElement('div'); ov.id = 'profile-modal';
+  ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(26,58,38,0.6);z-index:2000;display:flex;align-items:flex-end;';
+  window._closeModal = function(){ const sy=parseInt(document.body.style.top||'0')*-1;document.body.style.cssText=document.body.style.cssText.replace(/position:fixed[^;]*;top:[^;]*;width:[^;]*;overflow:hidden;?/,'');window.scrollTo(0,sy);document.getElementById('profile-modal')?.remove(); };
+  ov.onclick = e => { if(e.target===ov) window._closeModal(); };
+
+  const sportTags = SPORTS_LIST.map(s=>`<div onclick="toggleTag('${m.id}','sports','${s}')" id="tag-sports-${m.id}-${s.replace(/\//g,'-')}" style="padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid ${(m.sports||[]).includes(s)?'var(--green)':'var(--border2)'};background:${(m.sports||[]).includes(s)?'var(--green)':'#fff'};color:${(m.sports||[]).includes(s)?'#fff':'var(--muted)'};cursor:pointer">${SPORT_EMOJI_MAP2[s]||''} ${s}</div>`).join('');
+  
+  const allergyTags = ALLERGIES_LIST.map(a=>`<div onclick="toggleTag('${m.id}','allergies','${a}')" id="tag-allergies-${m.id}-${a.replace(/ /g,'-')}" style="padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid ${(m.allergies||[]).includes(a)?'var(--danger)':'var(--border2)'};background:${(m.allergies||[]).includes(a)?'var(--danger)':'#fff'};color:${(m.allergies||[]).includes(a)?'#fff':'var(--muted)'};cursor:pointer">${a}</div>`).join('');
+
+  const prefTags = PREFS_LIST.map(p=>`<div onclick="toggleTag('${m.id}','prefs','${p}')" id="tag-prefs-${m.id}-${p.replace(/ /g,'-')}" style="padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid ${(m.prefs||[]).includes(p)?'var(--danger)':'var(--border2)'};background:${(m.prefs||[]).includes(p)?'var(--danger)':'#fff'};color:${(m.prefs||[]).includes(p)?'#fff':'var(--muted)'};cursor:pointer">${p}</div>`).join('');
+  
+  const likesTags = LIKES_LIST.map(p=>`<div onclick="toggleTag('${m.id}','likes','${p}')" id="tag-likes-${m.id}-${p.replace(/ /g,'-')}" style="padding:7px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid ${(m.likes||[]).includes(p)?'var(--green)':'var(--border2)'};background:${(m.likes||[]).includes(p)?'var(--green)':'#fff'};color:${(m.likes||[]).includes(p)?'#fff':'var(--muted)'};cursor:pointer">${p}</div>`).join('');
+
+  ov.innerHTML = `<div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:90vh;overflow-y:auto;overflow-x:hidden;padding:0 0 40px;-webkit-overflow-scrolling:touch;">
+    <div style="padding:16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;border-radius:24px 24px 0 0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div onclick="pickEmoji('${m.id}')" style="font-size:28px;cursor:pointer;background:var(--surf2);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center" title="Tik om te wijzigen">${m.emoji}</div>
+        <div><div style="font-size:16px;font-weight:800;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:500">Profiel instellen</div></div>
+      </div>
+      <button onclick="window._closeModal()" style="background:none;border:none;color:var(--muted2);font-size:26px;cursor:pointer;line-height:1;padding:4px 8px">×</button>
+    </div>
+    <div style="padding:14px">
+      <!-- Basis -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Basis</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="flex:1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Gewicht (kg)</div>
+          <input type="number" id="prof-weight" value="${m.weight||70}" step="0.1" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:14px;font-weight:600;font-family:inherit"></div>
+        <div style="flex:1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Lengte (cm)</div>
+          <input type="number" id="prof-height" value="${m.height||170}" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:14px;font-weight:600;font-family:inherit"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Geboortedatum</div>
+        <input type="date" id="prof-dob" value="${m.dob||''}" style="width:160px;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:14px;font-weight:600;font-family:inherit;box-sizing:border-box;display:block">
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Geslacht</div>
+        <div style="display:flex;gap:8px">
+          <button id="gender-m" onclick="setGender('m','${m.id}')" style="flex:1;padding:9px;border-radius:var(--rsm);border:1.5px solid ${(m.gender||'m')==='m'?'var(--green)':'var(--border2)'};background:${(m.gender||'m')==='m'?'var(--green)':'#fff'};color:${(m.gender||'m')==='m'?'#fff':'var(--muted)'};font-size:13px;font-weight:700;cursor:pointer">👨 Man</button>
+          <button id="gender-v" onclick="setGender('v','${m.id}')" style="flex:1;padding:9px;border-radius:var(--rsm);border:1.5px solid ${m.gender==='v'?'var(--green)':'var(--border2)'};background:${m.gender==='v'?'var(--green)':'#fff'};color:${m.gender==='v'?'#fff':'var(--muted)'};font-size:13px;font-weight:700;cursor:pointer">👩 Vrouw</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Activiteitsniveau</div>
+        <select id="prof-activity" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit">
+          ${ACTIVITY_LABELS.map((l,i)=>`<option value="${i}"${(m.activity||2)===i?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Doel</div>
+        <select id="prof-goal" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit">
+          <option value="gezond"${m.goal==='gezond'?' selected':''}>Gezond blijven</option>
+          <option value="afvallen"${m.goal==='afvallen'?' selected':''}>Afvallen / vet verliezen</option>
+          <option value="spieren"${m.goal==='spieren'?' selected':''}>Spieren opbouwen</option>
+        </select>
+      </div>
+
+      <!-- Sporten -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">🏃 Sporten</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px">${sportTags}</div>
+      <div id="sport-schedule-${m.id}" style="${(m.sports||[]).filter(s=>s!=='Geen sport').length > 0 ? '' : 'display:none'}">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:8px">Op welke dag(en) en hoe lang?</div>
+      <div style="display:flex;flex-direction:column;gap:0;margin-bottom:14px">
+        ${(m.sports||[]).filter(s=>s!=='Geen sport').map(s=>`
+        <div style="background:var(--surf2);border-radius:var(--rsm);padding:10px 12px">
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${SPORT_EMOJI_MAP2[s]||''} ${s}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;flex-wrap:wrap;gap:4px;flex:1">
+              ${DAY_NAMES.map((d,i)=>`<div onclick="toggleSportDay('${m.id}','${s}',${i})" id="sday-${m.id}-${s.replace(/ /g,'-')}-${i}" style="padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${((m.sport_schedule||{})[s+'_days']||[]).includes(i)?'var(--green)':'var(--border2)'};background:${((m.sport_schedule||{})[s+'_days']||[]).includes(i)?'var(--green)':'#fff'};color:${((m.sport_schedule||{})[s+'_days']||[]).includes(i)?'#fff':'var(--muted)'}">${d.slice(0,2)}</div>`).join('')}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <span style="font-size:11px;color:var(--muted);font-weight:600">Duur:</span>
+              <select id="sport-dur-${m.id}-${s.replace(/ /g,'-')}" style="font-size:12px;border:1.5px solid var(--border2);border-radius:8px;padding:5px 8px;background:#fff;color:var(--text);font-weight:600">
+                <option value="">-</option>
+                ${[30,45,60,75,90,120].map(d=>`<option value="${d}" ${(m.sport_schedule||{})[s+'_dur']==d?'selected':''}>${d} min</option>`).join('')}
+              </select>
+            </div>
+          </div>
+        </div>`).join('')}
+      </div>
+      </div>
+
+      <!-- Allergieën -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">🚫 Allergieën</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px">${allergyTags}</div>
+
+      <!-- Voorkeuren -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">🚫 Eet ik niet / wil ik niet</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px">${prefTags}</div>
+      <div style="font-size:10px;color:var(--green2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">💚 Eet ik graag</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:20px">${likesTags}</div>
+
+      <button onclick="saveProfile('${m.id}')" style="width:100%;padding:14px;border-radius:var(--rsm);background:linear-gradient(135deg,#2ECC71,#27AE60);border:none;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(46,204,113,0.4)">✓ Profiel opslaan</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  window._editingMember = m.id;
+  window._editGender = m.gender || 'm';
+}
+
+let _memberEdits = {};
+
+function pickEmoji(memberId){
+  const emojis = ['👤','💪','👩','🌸','⭐','🧒','👦','👧','🧑','🏃','🏋️','🤸','⚽','🎾','🏊','🚴','🧘','🥊'];
+  const existing = document.getElementById('emoji-picker-'+memberId);
+  if(existing){existing.remove();return;}
+  const el = document.createElement('div');
+  el.id = 'emoji-picker-'+memberId;
+  el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 40px rgba(0,0,0,0.3);z-index:3000;display:flex;flex-wrap:wrap;gap:8px;max-width:280px;justify-content:center';
+  el.innerHTML = emojis.map(e=>`<div onclick="setMemberEmoji('${memberId}','${e}');document.getElementById('emoji-picker-${memberId}').remove()" style="font-size:32px;cursor:pointer;padding:4px;border-radius:8px;hover:background:#f0f0f0">${e}</div>`).join('');
+  document.body.appendChild(el);
+}
+
+async function setMemberEmoji(memberId, emoji){
+  await sb.from('family_members').update({emoji}).eq('id',memberId);
+  const idx = members.findIndex(m=>m.id===memberId);
+  if(idx>-1) members[idx].emoji = emoji;
+  renderSettings();
+}
+
+function saveSportDur(memberId, sport, dayIdx, val){
+  const m = members.find(mem=>mem.id===memberId); if(!m) return;
+  if(!m.sport_schedule) m.sport_schedule = {};
+  m.sport_schedule[sport+'_dur_'+dayIdx] = parseInt(val)||null;
+}
+
+function toggleSportDay(memberId, sport, dayIdx){
+  const m = members.find(mem=>mem.id===memberId); if(!m) return;
+  if(!m.sport_schedule) m.sport_schedule = {};
+  const key = sport+'_days';
+  const current = [...(m.sport_schedule[key]||[])];
+  const i = current.indexOf(dayIdx);
+  if(i>-1) current.splice(i,1); else current.push(dayIdx);
+  m.sport_schedule[key] = current;
+  // Re-render schedule section for this member
+  const m2 = members.find(mem=>mem.id===memberId);
+  if(m2) {
+    const schedDiv = document.getElementById('sport-schedule-'+memberId);
+    if(schedDiv) {
+      const updatedSports = (_memberEdits[memberId]?.sports || m2.sports || []).filter(s=>s!=='Geen sport');
+      // Trigger re-render via toggleTag logic
+      const schHtml = updatedSports.map(s=>{
+        return buildSportScheduleRow(memberId, s, m2);
+      }).join('');
+      schedDiv.querySelector('div:last-child').innerHTML = schHtml;
+    }
+  }
+}
+
+function buildSportScheduleRow(memberId, s, m){
+  const days = ((m.sport_schedule||{})[s+'_days']||[]);
+  return `<div style="background:var(--surf2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:700;color:var(--text)">${SPORT_EMOJI_MAP2[s]||''} ${s}</span>
+      ${days.length>0?`<span style="font-size:11px;color:var(--muted);font-weight:500">${days.map(i=>DAY_NAMES[i].slice(0,2)).join(', ')}</span>`:''}
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:${days.length>0?'8px':'0'}">
+      ${DAY_NAMES.map((d,i)=>{
+        const active = days.includes(i);
+        return `<div onclick="toggleSportDay('${memberId}','${s}',${i})" id="sday-${memberId}-${s.replace(/ /g,'-')}-${i}" style="padding:5px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${active?'var(--green)':'var(--border2)'};background:${active?'var(--green)':'#fff'};color:${active?'#fff':'var(--muted)'}">${d.slice(0,2)}</div>`;
+      }).join('')}
+    </div>
+    ${days.length>0?`<div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${days.map(i=>{
+        const dur = (m.sport_schedule||{})[s+'_dur_'+i]||'';
+        return `<div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:11px;color:var(--muted);font-weight:600">${DAY_NAMES[i].slice(0,2)}:</span>
+          <select id="sport-dur-${memberId}-${s.replace(/ /g,'-')}-${i}" onchange="saveSportDur('${memberId}','${s}',${i},this.value)" style="font-size:11px;border:1.5px solid var(--border2);border-radius:8px;padding:3px 6px;background:#fff;color:var(--text);font-weight:600">
+            <option value="">min?</option>
+            ${[30,45,60,75,90,120].map(d2=>`<option value="${d2}" ${dur==d2?'selected':''}>${d2}</option>`).join('')}
+          </select>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+  </div>`;
+}
+
+function toggleTag(memberId, field, val){
+  if(!_memberEdits[memberId]) _memberEdits[memberId] = {};
+  const m = members.find(mem=>mem.id===memberId);
+  if(!m) return;
+  const current = _memberEdits[memberId][field] !== undefined ? _memberEdits[memberId][field] : [...(m[field]||[])];
+  const idx = current.indexOf(val);
+  if(idx>-1) current.splice(idx,1); else current.push(val);
+  _memberEdits[memberId][field] = current;
+
+  // For sports: re-render the schedule section dynamically
+  if(field === 'sports'){
+    const scheduleDiv = document.getElementById('sport-schedule-'+memberId);
+    if(scheduleDiv){
+      const updatedSports = current.filter(s=>s!=='Geen sport');
+      if(updatedSports.length === 0){
+        scheduleDiv.style.display = 'none';
+      } else {
+        scheduleDiv.style.display = 'block';
+        const schHtml = updatedSports.map(s=>`
+          <div style="background:var(--surf2);border-radius:var(--rsm);padding:10px 12px;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${SPORT_EMOJI_MAP2[s]||''} ${s}</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                ${DAY_NAMES.map((d,i)=>{
+                  const active = ((m.sport_schedule||{})[s+'_days']||[]).includes(i);
+                  const dur = (m.sport_schedule||{})[s+'_dur_'+i]||'';
+                  return `<div style="display:flex;align-items:center;gap:6px">
+                    <div onclick="toggleSportDay('${memberId}','${s}',${i})" id="sday-${memberId}-${s.replace(/ /g,'-')}-${i}" style="padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${active?'var(--green)':'var(--border2)'};background:${active?'var(--green)':'#fff'};color:${active?'#fff':'var(--muted)'};min-width:36px;text-align:center">${d.slice(0,2)}</div>
+                    ${active?`<select id="sport-dur-${memberId}-${s.replace(/ /g,'-')}-${i}" onchange="saveSportDur('${memberId}','${s}',${i},this.value)" style="font-size:11px;border:1.5px solid var(--green);border-radius:8px;padding:3px 6px;background:#fff;color:var(--text);font-weight:600">
+                      <option value="">duur?</option>
+                      ${[30,45,60,75,90,120].map(d2=>`<option value="${d2}" ${dur==d2?'selected':''}>${d2} min</option>`).join('')}
+                    </select>`:'<span style="font-size:11px;color:var(--border2)">—</span>'}
+                  </div>`;
+                }).join('')}
+              </div>
+
+            </div>
+          </div>`).join('');
+        scheduleDiv.innerHTML = schHtml;
+      }
+    }
+  }
+
+  // Update button style
+  const safeVal = val.replace(/\//g,'-').replace(/ /g,'-');
+  const btn = document.getElementById('tag-'+field+'-'+memberId+'-'+safeVal);
+  if(btn){
+    const active = current.includes(val);
+    const colors = {sports:['var(--green)','#fff'],allergies:['var(--danger)','#fff'],prefs:['var(--danger)','#fff'],likes:['var(--green)','#fff']};
+    const [ac,ic] = colors[field]||['var(--green)','#fff'];
+    btn.style.borderColor = active?ac:'var(--border2)';
+    btn.style.background = active?ac:'#fff';
+    btn.style.color = active?ic:'var(--muted)';
+  }
+}
+
+function setGender(g, memberId){
+  window._editGender = g;
+  document.getElementById('gender-m').style.borderColor = g==='m'?'var(--green)':'var(--border2)';
+  document.getElementById('gender-m').style.background = g==='m'?'var(--green)':'#fff';
+  document.getElementById('gender-m').style.color = g==='m'?'#fff':'var(--muted)';
+  document.getElementById('gender-v').style.borderColor = g==='v'?'var(--green)':'var(--border2)';
+  document.getElementById('gender-v').style.background = g==='v'?'var(--green)':'#fff';
+  document.getElementById('gender-v').style.color = g==='v'?'#fff':'var(--muted)';
+}
+
+async function saveProfile(memberId){
+  const m = members.find(mem=>mem.id===memberId); if(!m) return;
+  const edits = _memberEdits[memberId] || {};
+  const weight = parseFloat(document.getElementById('prof-weight')?.value)||m.weight||70;
+  const height = parseFloat(document.getElementById('prof-height')?.value)||m.height||170;
+  const activity = parseInt(document.getElementById('prof-activity')?.value)||m.activity||2;
+  const goal = document.getElementById('prof-goal')?.value||m.goal||'gezond';
+  const gender = window._editGender || m.gender || 'm';
+  const sports = edits.sports !== undefined ? edits.sports : (m.sports||[]);
+  // Save sport schedule (day + time per sport)
+  const sport_schedule = {};
+  sports.filter(s=>s!=='Geen sport').forEach(s=>{
+    const days = (m.sport_schedule||{})[s+'_days']||[];
+    if(days.length) {
+      sport_schedule[s+'_days'] = days;
+      // Save duration per active day
+      days.forEach(dayIdx=>{
+        const durEl = document.getElementById('sport-dur-'+m.id+'-'+s.replace(/ /g,'-')+'-'+dayIdx);
+        const savedDur = (m.sport_schedule||{})[s+'_dur_'+dayIdx];
+        const dur = durEl?.value ? parseInt(durEl.value) : savedDur;
+        if(dur) sport_schedule[s+'_dur_'+dayIdx] = dur;
+      });
+    }
+  });
+  const allergies = edits.allergies !== undefined ? edits.allergies : (m.allergies||[]);
+  const prefs = edits.prefs !== undefined ? edits.prefs : (m.prefs||[]);
+
+  const dobRaw = document.getElementById('prof-dob')?.value || m.dob || '';
+  const dob = dobRaw && dobRaw.trim() !== '' ? dobRaw : null;
+
+  // Calculate targets
+  const tempM = {...m, weight, height, activity, goal, gender, dob};
+  const kcalTarget = calcKcal(tempM);
+  const protTarget = calcProt({...tempM, sports});
+
+  const likes = edits.likes !== undefined ? edits.likes : (m.likes||[]);
+  const updateData = {weight,height,activity,goal,gender,dob,sports,sport_schedule,allergies,prefs,likes,kcal_target:kcalTarget,prot_target:protTarget};
+  if(dob !== null) updateData.dob = dob;
+  const{error} = await sb.from('family_members').update(updateData).eq('id',memberId);
+  if(error){alert('Fout: '+error.message);return;}
+
+  // Update local
+  const idx = members.findIndex(mem=>mem.id===memberId);
+  if(idx>-1) members[idx] = {...m,weight,height,activity,goal,gender,dob,sports,allergies,prefs,likes,kcal_target:kcalTarget,prot_target:protTarget};
+  if(memberId===member?.id) member = members[idx];
+  delete _memberEdits[memberId];
+
+    window._closeModal();
+  alert(`✅ Profiel opgeslagen!\n${kcalTarget} kcal · ${protTarget}g eiwit per dag`);
+  renderSettings();
+}
+
+
+// SMART RECIPE GENERATION
+async function refreshRecipes(){
+  const apiKey = localStorage.getItem('gf-apikey');
+  if(!apiKey){ alert('Vul eerst je API key in.'); return; }
+  
+  const currentRecipes = [...recipes];
+  if(currentRecipes.length === 0){ return generateRecipes(); }
+  
+  // Keep half, replace half
+  const keepCount = Math.ceil(currentRecipes.length / 2);
+  const toKeep = currentRecipes.slice(0, keepCount);
+  const toReplace = currentRecipes.slice(keepCount);
+  
+  // Try to get replacements from global db first
+  const globalRecs = await loadGlobalRecipes(50);
+  const currentNames = currentRecipes.map(r=>r.name);
+  const forbidden2 = [...(family.allergyList||[])];
+  
+  const candidates = globalRecs.filter(r => 
+    r.gv && 
+    !currentNames.includes(r.name) &&
+    !forbidden.some(f=>JSON.stringify(r.ingredients||[]).toLowerCase().includes(f.toLowerCase()))
+  );
+  
+  if(candidates.length >= toReplace.length){
+    // Replace from global db
+    const replacements = candidates.slice(0,toReplace.length).map(r=>({
+      ...r, family_id:family.id, is_default:true, created_by:user.id, id:undefined
+    }));
+    
+    // Delete old ones
+    for(const r of toReplace){
+      await sb.from('recipes').delete().eq('id',r.id);
+    }
+    // Insert new ones
+    await sb.from('recipes').insert(replacements);
+    await loadRecipes();
+    alert('✅ '+replacements.length+' recepten gewisseld uit de database!');
+    renderMenuList();
+    renderSettings();
+  } else {
+    // Not enough in global db, generate new ones
+    alert('Niet genoeg recepten in de database, nieuwe recepten worden gegenereerd...');
+    generateRecipes();
+  }
+}
+
+async function generateRecipes(){
+  const apiKey = localStorage.getItem('gf-apikey');
+  if(!apiKey){
+    alert('Vul eerst je Anthropic API key in via Instellingen → API Key.');
+    switchTab('settings');
+    return;
+  }
+  
+  // Show loading overlay
+  const loadDiv = document.createElement('div');
+  loadDiv.id = 'gen-loading';
+  loadDiv.style.cssText = 'position:fixed;inset:0;background:rgba(26,58,38,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px';
+  loadDiv.innerHTML = `
+    <div style="font-size:48px;margin-bottom:20px;animation:spin 3s linear infinite">🤖</div>
+    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;text-align:center">Weekmenu genereren</div>
+    <div id="gen-msg" style="font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:20px;text-align:center;max-width:260px;min-height:36px;line-height:1.5">Gezinsprofiel analyseren...</div>
+    <div style="width:260px;height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;margin-bottom:8px">
+      <div id="gen-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#2ECC71,#7DFFB3);border-radius:3px;transition:width 0.3s ease"></div>
+    </div>
+    <div id="gen-pct" style="font-size:13px;color:rgba(255,255,255,0.5);font-weight:500">0%</div>
+  `;
+  
+  // Auto-increment progress bar while waiting
+  let _autoProgress = 0;
+  let _targetProgress = 5;
+  const _msgs = [
+    [5,'Allergieën en voorkeuren verwerken...'],
+    [15,'Sportdagen en caloriebehoefte berekenen...'],
+    [25,'Eerste recepten bedenken voor jouw gezin...'],
+    [40,'Ingrediënten aanpassen voor allergieën...'],
+    [55,'Tweede batch recepten genereren...'],
+    [70,'Recepten controleren op verboden ingrediënten...'],
+    [82,'Laatste recepten afronden...'],
+    [90,'Dagindeling en voedingswaarden berekenen...'],
+    [95,'Recepten opslaan in database...'],
+  ];
+  let _msgIdx = 0;
+  const _progressTimer = setInterval(()=>{
+    if(_autoProgress < _targetProgress - 1){
+      _autoProgress = Math.min(_autoProgress + 0.4, _targetProgress - 0.5);
+      const bar = document.getElementById('gen-bar');
+      const pct = document.getElementById('gen-pct');
+      if(bar) bar.style.width = _autoProgress+'%';
+      if(pct) pct.textContent = Math.round(_autoProgress)+'%';
+    }
+    // Update message based on progress
+    while(_msgIdx < _msgs.length && _autoProgress >= _msgs[_msgIdx][0]){
+      const msg = document.getElementById('gen-msg');
+      if(msg) msg.textContent = _msgs[_msgIdx][1];
+      _msgIdx++;
+    }
+  }, 150);
+  window._progressTimer = _progressTimer;
+  document.body.appendChild(loadDiv);
+  
+  // Animate progress
+  const stepTimer = null; // No auto-animation, manual control
+
+  // Build family context
+  const allergyList = [...new Set(members.flatMap(m=>(m.allergies||[]).filter(a=>a!=='Geen')))];
+  const prefList = [...new Set(members.flatMap(m=>(m.prefs||[])))];
+  const exclusions = prefList.filter(p=>p.startsWith('Geen ')).map(p=>p.replace('Geen ',''));
+  const sportDays = {
+    0: members.filter(m=>(m.sports||[]).length>0).map(m=>m.name+' ('+m.sports.join(', ')+')'),
+    1: members.filter(m=>(m.sports||[]).length>0).map(m=>m.name),
+    // simplified - use general sports
+  };
+  const avgKcal = Math.round(members.reduce((s,m)=>s+(m.kcal_target||2000),0)/members.length);
+  const numPersons = members.length;
+  const hasKids = members.some(m=>getAge(m.dob||'2010-01-01')<12);
+  const hasToddler = members.some(m=>getAge(m.dob||'2020-01-01')<6);
+  
+  const memberDetails = members.map(m=>{
+    const ma=(m.allergies||[]).filter(a=>a!=='Geen');
+    const me=(m.prefs||[]).filter(p=>p.startsWith('Geen ')).map(p=>p.replace('Geen ',''));
+    const ml=(m.likes||[]);
+    const parts=[];
+    if(ma.length) parts.push('ALLERGISCH voor: '+ma.join(', '));
+    if(me.length) parts.push('LUST NIET: '+me.join(', '));
+    if(ml.length) parts.push('LUST GRAAG: '+ml.map(l=>l.replace('Houdt van ','')).join(', '));
+    return parts.length ? m.name+' → '+parts.join(' | ') : null;
+  }).filter(Boolean);
+
+  const familyContext = `\nGezin: ${family.name} met ${numPersons} personen\nLeden: ${members.map(m=>`${m.name} (${getAge(m.dob||'2000-01-01')} jaar, ${m.kcal_target||2000} kcal doel)`).join(', ')}\n\nALLERGIEEN EN VOORKEUREN — VERPLICHT RESPECTEREN:\n${memberDetails.length ? memberDetails.join('\n') : 'Geen beperkingen'}\nVerboden voor heel gezin: ${[...allergyList,...exclusions].length?[...allergyList,...exclusions].join(', '):'geen'} — gebruik NOOIT\n\nCalorie doel: ${avgKcal} kcal per persoon\nKinderen: ${hasKids?'ja, kindvriendelijk koken':'nee'}\nSporten: ${members.filter(m=>(m.sports||[]).length>0).map(m=>m.name+': '+m.sports.join(', ')).join('; ')||'niet ingesteld'}\n\nWeekstructuur:\n- Maandag: kracht training (meer koolhydraten gewenst)\n- Dinsdag: boksen (matig koolhydraten)\n- Woensdag: rustdag (low-carb avond)\n- Donderdag: boksen (matig koolhydraten)\n- Vrijdag: kracht training (meer koolhydraten gewenst)\n- Zaterdag: cheatdag (pizza.sports.join(', ')).join('; ')||'niet ingesteld'}
+
+Weekstructuur:
+- Maandag: kracht training (meer koolhydraten gewenst)
+- Dinsdag: boksen (matig koolhydraten)
+- Woensdag: rustdag (low-carb avond)
+- Donderdag: boksen (matig koolhydraten)
+- Vrijdag: kracht training (meer koolhydraten gewenst)
+- Zaterdag: cheatdag (pizza, patat of BBQ mag)
+- Zondag: padel (actieve ochtend, stevig avondmenu)`;
+
+  const forbidden = [...allergyList, ...exclusions].filter(Boolean);
+  const prompt = `Maak ${numPersons} personen weekmenu JSON. Gezin: ${memberDetails.join(' | ')}.
+VERBODEN: ${forbidden.length ? forbidden.join(', ') : 'niets'} — gebruik NOOIT.
+GV verplicht. Kcal per persoon: ${avgKcal}.
+
+Geef ALLEEN een JSON array van 7 recepten:
+[{"name":"naam","kcal":480,"prot":42,"time_min":30,"low_carb":false,"gv":true,"tip":"tip","days":[0],"ingredients":[["Ingrediënt","hoeveelheid"]],"steps":["Verhit pan. Voeg X toe. Bak 5 min."]}]
+
+days: 0=ma 1=di 2=wo 3=do 4=vr 5=za 6=zo. Geen markdown, alleen JSON.`;
+
+  // Show loading
+  const btn = document.getElementById('gen-recipes-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Recepten worden gegenereerd...'; }
+  
+  try{
+    // Batch 1
+    document.getElementById('gen-bar').style.width='30%';
+    
+    
+    const setBar = (pct) => {
+      _targetProgress = pct;
+      _autoProgress = Math.max(_autoProgress, pct - 10);
+    };
+    const doCall = async(batchNum, namen_te_vermijden='') => {
+      setBar([5, 35, 65][batchNum]);
+
+      const sportDayMap = {0:'ma',1:'di',2:'wo',3:'do',4:'vr',5:'za',6:'zo'};
+      const sportsInfo = members.filter(m=>(m.sports||[]).length>0)
+        .map(m=>m.name+' sport: '+m.sports.join(', ')).join('; ');
+      
+      // Get inspiration from global recipe database
+      const globalRecs = await loadGlobalRecipes(30);
+      const gvGlobalRecs = globalRecs.filter(r=>r.gv && !forbidden.some(f=>
+        JSON.stringify(r.ingredients||[]).toLowerCase().includes(f.toLowerCase())
+      ));
+      const globalInspiration = gvGlobalRecs.length > 0 
+        ? '\nInspiratie uit bewezen recepten (gebruik als basis maar maak variaties): '+
+          gvGlobalRecs.slice(0,10).map(r=>r.name).join(', ')
+        : '';
+      
+      const hasKidsUnder12 = members.some(m=>getAge(m.dob||'2010-01-01')<12);
+      const cookingTime = hasKidsUnder12 ? 30 : 45;
+      
+      const dagPrompt = `Je bent een gezinskok. Maak PRECIES 7 praktische avondrecepten.
+
+GEZIN (${numPersons} personen):
+${memberDetails.join('\n')}
+
+ABSOLUUT VERBODEN — gebruik NOOIT, ook niet verstopt in sauzen of vullingen:
+${forbidden.length ? forbidden.map(f=>'❌ '+f).join('\n') : '✅ geen beperkingen'}
+
+VERPLICHTE REGELS:
+✅ Altijd glutenvrij (GV) — gebruik GV pasta, GV sojasaus (tamari), GV bouillon
+✅ Max ${cookingTime} minuten bereidingstijd${hasKidsUnder12?' — kinderen aanwezig, kindvriendelijk':''}
+✅ Gewone supermarkt ingrediënten (AH, Jumbo)
+✅ ${Math.round(avgKcal*0.9)}-${Math.round(avgKcal*1.1)} kcal per persoon
+✅ Min ${Math.round((members.reduce((s,m)=>s+(m.prot_target||100),0)/members.length)*0.8)}g eiwit per persoon
+✅ Alledaagse smaken waar het hele gezin blij van wordt
+${namen_te_vermijden ? '✅ Andere recepten dan: '+namen_te_vermijden : ''}${globalInspiration}
+
+DAGINDELING:
+- Ma(0)/Di(1)/Do(3)/Vr(4): sportdag → pasta/rijst/aardappel als basis, eiwitrijk vlees of vis
+- Wo(2): rustdag → low-carb, bijv. omelet, soep, salade met kip
+- Za(5): gezellig → pizza GV, zelfgemaakte burger, BBQ, tacos
+- Zo(6): uitgebreid → stampot, ovenschotel, lasagne GV
+
+VOORBEELDRECEPTEN die goed werken: spaghetti bolognese GV, kippensoep, nasi GV, gehaktballen met aardappelpuree, ovenkip met groente, chili con carne, wraps GV met kip
+
+Geef EXACT 7 recepten als JSON — alleen de array, geen uitleg:
+[{"name":"GV Spaghetti bolognese","kcal":520,"prot":42,"time_min":30,"low_carb":false,"gv":true,"tip":"Gebruik GV spaghetti van Schär","days":[0],"ingredients":[["GV spaghetti","${Math.round(80*numPersons)}g"],["rundergehakt","${Math.round(125*numPersons)}g"],["passata","400g"],["ui","1 stuks"],["knoflook","2 tenen"],["olijfolie","1 el"],["Italiaanse kruiden","1 tl"],["zout en peper","naar smaak"]],"steps":["Kook GV spaghetti 8-10 min volgens verpakking.","Snipper ui en knoflook. Verhit olie in pan op middelhoog vuur.","Voeg ui toe, bak 3 min glazig. Voeg knoflook toe, bak 1 min.","Voeg gehakt toe, bak 5 min rul. Breng op smaak met zout en peper.","Voeg passata en kruiden toe. Laat 10 min sudderen op laag vuur.","Giet pasta af. Serveer met saus."]}]`;
+
+      const r = await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:5000,messages:[{role:'user',content:dagPrompt}]})
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.error?.message||'API fout batch '+(batchNum+1));
+      const t = d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+      const jm = t.match(/\[[\s\S]*\]/);
+      if(!jm) return [];
+      try{ 
+        const result = JSON.parse(jm[0]);
+        // Update progress AFTER successful call
+        setBar([30, 60, 90][batchNum]);
+        return Array.isArray(result) ? result : [];
+      } catch(e){ 
+        // Try to fix truncated JSON
+        try{ 
+          const fixed = jm[0].replace(/,\s*\{[^{]*$/, ']');
+          return JSON.parse(fixed);
+        } catch(e2){ return []; } 
+      }
+    };
+
+    const batch1 = await doCall(0);
+    const batch2 = await doCall(1, batch1.map(r=>r.name).join(', '));
+    const batch3 = await doCall(2, [...batch1,...batch2].map(r=>r.name).join(', '));
+    
+    document.getElementById('gen-bar').style.width='95%';
+    
+    
+    const allRecipes = [...batch1,...batch2,...batch3].filter(r=>r&&r.name);
+    if(allRecipes.length < 5) throw new Error('Te weinig recepten ('+allRecipes.length+'). Probeer opnieuw.');
+    // Assign days: 3 recipes per day, spread across week
+    // Use days from AI response, fallback to spread across week
+    const usedDays = new Set();
+    const newRecipes = allRecipes.map((r,i) => {
+      const day = (Array.isArray(r.days)&&r.days.length>0) ? r.days[0]%7 : i%7;
+      return {...r, days:[day]};
+    });
+    
+    // Delete old default recipes, keep custom ones
+    const{error:delError} = await sb.from('recipes').delete().eq('family_id',family.id).eq('is_default',true);
+    if(delError) throw new Error('Kon oude recepten niet verwijderen: '+delError.message);
+    
+    // Insert new recipes for this family
+    const inserts = newRecipes.map(r=>({
+      ...r,
+      family_id: family.id,
+      is_default: true,
+      created_by: user.id
+    }));
+    const{error:insError} = await sb.from('recipes').insert(inserts);
+    if(insError) throw new Error('Kon recepten niet opslaan: '+insError.message);
+    
+    // Increment times_used for global recipes that match generated ones
+    try {
+      for(const r of newRecipes){
+        await sb.from('global_recipes').update({times_used: 999}).eq('name',r.name);
+        // Use RPC or raw increment - just try
+        const {data:gr} = await sb.from('global_recipes').select('id,times_used').eq('name',r.name).limit(1);
+        if(gr && gr[0]){
+          await sb.from('global_recipes').update({times_used:(gr[0].times_used||0)+1}).eq('id',gr[0].id);
+        }
+      }
+    } catch(e){}
+    
+    // Also contribute to global recipe database (silently)
+    try {
+      const globalInserts = newRecipes.map(r=>({
+        name: r.name,
+        kcal: r.kcal,
+        prot: r.prot,
+        time_min: r.time_min,
+        low_carb: r.low_carb || false,
+        gv: r.gv || true,
+        tip: r.tip,
+        ingredients: r.ingredients,
+        steps: r.steps,
+        days: r.days,
+        tags: [
+          ...(r.gv ? ['glutenvrij'] : []),
+          ...(r.low_carb ? ['low-carb'] : []),
+          ...(r.kcal > 500 ? ['eiwitrijk'] : []),
+        ],
+        contributed_by: family.id,
+        approved: true
+      }));
+      // Only add if not already in global db
+      for(const gr of globalInserts){
+        const {data:existing} = await sb.from('global_recipes').select('id').eq('name',gr.name).limit(1);
+        if(!existing || existing.length === 0){
+          await sb.from('global_recipes').insert(gr);
+        }
+      }
+    } catch(e){ console.log('Global db toevoegen mislukt (niet kritiek):', e.message); }
+    
+    await loadRecipes();
+    clearInterval(stepTimer);
+    clearInterval(window._progressTimer);
+    // Show 100% briefly
+    _targetProgress = 100; _autoProgress = 100;
+    const _b = document.getElementById('gen-bar');
+    const _p = document.getElementById('gen-pct');
+    if(_b) _b.style.width='100%';
+    if(_p) _p.textContent='100%';
+    await new Promise(r=>setTimeout(r,500));
+    document.getElementById('gen-loading')?.remove();
+    if(btn){ btn.disabled=false; btn.textContent='✨ Nieuwe recepten genereren'; }
+    alert('✅ '+newRecipes.length+' recepten gegenereerd voor '+family.name+'!\nPerfect afgestemd op jullie gezin.');
+    switchTab('menulist');
+  } catch(e){
+    clearInterval(stepTimer);
+    clearInterval(window._progressTimer);
+    // Show 100% briefly
+    _targetProgress = 100; _autoProgress = 100;
+    const _b = document.getElementById('gen-bar');
+    const _p = document.getElementById('gen-pct');
+    if(_b) _b.style.width='100%';
+    if(_p) _p.textContent='100%';
+    await new Promise(r=>setTimeout(r,500));
+    document.getElementById('gen-loading')?.remove();
+    if(btn){ btn.disabled=false; btn.textContent='✨ Nieuwe recepten genereren'; }
+    alert('Fout bij genereren: '+e.message);
+  }
+}
+
+async function genInvite(type='member'){
+  if(type==='member'){
+    // Gezinslid link — koppelt aan dit gezin
+    const{data:existing}=await sb.from('invitations').select('*').eq('family_id',family.id).eq('used',false).limit(1);
+    let data;
+    if(existing&&existing.length>0){
+      data=existing[0];
+    } else {
+      const{data:newInv,error}=await sb.from('invitations').insert({family_id:family.id,email:'invite@gezinfit.nl'}).select().single();
+      if(error){alert('Fout: '+error.message);return;}
+      data=newInv;
+    }
+    const url='https://app.gezinfit.nl?invite='+data.token;
+    const el=document.getElementById('invite-member-result');
+    el.innerHTML=`<div style="margin-top:10px">
+      <div class="invite-link-box">${url}</div>
+      <button onclick="navigator.share?navigator.share({title:'Gezinfit uitnodiging',url:'${url}'}):navigator.clipboard.writeText('${url}').then(()=>alert('Link gekopieerd!'))" style="width:100%;padding:10px;border-radius:var(--rsm);background:#fff;border:1.5px solid var(--green);color:var(--green2);font-size:13px;font-weight:700;cursor:pointer">📤 Deel link met gezinslid</button>
+    </div>`;
+  } else {
+    // Nieuw gezin link — starten eigen gezin
+    const token = 'new-' + Math.random().toString(36).substr(2,12);
+    const url = 'https://app.gezinfit.nl?newgezin='+token;
+    const el=document.getElementById('invite-family-result');
+    el.innerHTML=`<div style="margin-top:10px">
+      <div class="invite-link-box">${url}</div>
+      <button onclick="navigator.share?navigator.share({title:'Gezinfit uitnodiging',url:'${url}'}):navigator.clipboard.writeText('${url}').then(()=>alert('Link gekopieerd!'))" style="width:100%;padding:10px;border-radius:var(--rsm);background:#fff;border:1.5px solid var(--boks);color:var(--boks);font-size:13px;font-weight:700;cursor:pointer">📤 Deel link met testgezin</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">Ze starten hun eigen gezin — komen niet bij jou in</div>
+    </div>`;
+  }
+}
+
+// SCANNER
+function openScanner(ctx){
+  scanCtx=ctx;scanPersons=ctx.personId?[ctx.personId]:[member?.id].filter(Boolean);scannedProd=null;_scanLock=false;
+  const ov=document.createElement('div');ov.id='scan-ov';ov.className='scanner-overlay';
+  ov.innerHTML=`<div class="scanner-header"><div class="scanner-title">📷 Barcode scannen</div><button class="scanner-close" onclick="closeScanner()">×</button></div>
+    <div class="scanner-viewport"><video id="scan-video" autoplay playsinline muted></video>
+    <div class="scanner-frame"><div class="scanner-box"></div></div>
+    <div class="scanner-line"></div><div class="scanner-hint" id="scan-hint">Houd de barcode in het groene kader</div></div>
+    <div class="scanner-result" id="scan-result"></div>`;
+  document.body.appendChild(ov);startCam();
+}
+
+async function startCam(){
+  if(typeof ZXing==='undefined'){document.getElementById('scan-hint').textContent='Bibliotheek niet geladen.';return;}
+  try{codeReader=new ZXing.BrowserMultiFormatReader();
+    await codeReader.decodeFromVideoDevice(null,document.getElementById('scan-video'),(res,err)=>{if(res&&!scannedProd&&!_scanLock)handleBarcode(res.getText());});
+  }catch(e){const h=document.getElementById('scan-hint');if(h)h.textContent='Camera toegang geweigerd.';}
+}
+
+async function handleBarcode(bc){
+  if(scannedProd||_scanLock)return;_scanLock=true;
+  const h=document.getElementById('scan-hint');if(h)h.textContent='Zoeken...';
+  try{
+    const r=await fetch('https://world.openfoodfacts.org/api/v0/product/'+bc+'.json');const d=await r.json();
+    if(d.status!==1||!d.product){if(h)h.textContent='Niet gevonden.';setTimeout(()=>{scannedProd=null;_scanLock=false;if(h)h.textContent='Houd de barcode in het groene kader';},2500);return;}
+    const p=d.product;const n=p.nutriments||{};
+    scannedProd={name:p.product_name_nl||p.product_name||'Onbekend',brand:p.brands||'',kcal:Math.round(n['energy-kcal_100g']||0),prot:Math.round((n.proteins_100g||0)*10)/10,carbs:Math.round((n.carbohydrates_100g||0)*10)/10,fat:Math.round((n.fat_100g||0)*10)/10};
+    showScanResult();
+  }catch(e){if(h)h.textContent='Verbindingsfout.';setTimeout(()=>{scannedProd=null;_scanLock=false;if(h)h.textContent='Houd de barcode in het groene kader';},2500);}
+}
+
+function showScanResult(){
+  const p=scannedProd;const el=document.getElementById('scan-result');if(!el)return;
+  el.innerHTML=`<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">${p.name}${p.brand?' <span style="font-size:11px;color:var(--muted)">— '+p.brand+'</span>':''}</div>
+    <div class="scanner-macros"><div class="scanner-macro"><div class="v">${p.kcal}</div><div class="l">kcal/100g</div></div><div class="scanner-macro"><div class="v">${p.prot}g</div><div class="l">eiwit</div></div><div class="scanner-macro"><div class="v">${p.carbs}g</div><div class="l">koolhyd.</div></div><div class="scanner-macro"><div class="v">${p.fat}g</div><div class="l">vet</div></div></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><input type="number" id="sg" value="100" min="1" max="2000" oninput="updateCalc()" style="width:80px;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:7px 10px;color:var(--text);font-size:14px;font-weight:700;text-align:center"><span style="font-size:13px;color:var(--muted);font-weight:500">gram</span><span style="font-size:13px;font-weight:700;color:var(--green2)" id="sc">${p.kcal} kcal · ${p.prot}g eiwit</span></div>
+    <div style="margin-bottom:10px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Maaltijdmoment</div>
+    <select id="smt" style="width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:8px 11px;color:var(--text);font-size:13px">${MEAL_MOMENTS.map(m=>`<option value="${m.key}"${m.key===(scanCtx?.mealType||'snack1')?' selected':''}>${m.label}</option>`).join('')}</select></div>
+    <div style="margin-bottom:10px"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Voor wie?</div>
+    <div class="scanner-person-btns" id="spb">${members.map(m=>`<button class="scanner-person-btn${scanPersons.includes(m.id)?' sel':''}" onclick="toggleScanPerson('${m.id}')">${m.emoji} ${m.name}</button>`).join('')}</div></div>
+    <button class="scanner-add-btn" onclick="addScan()">✓ Toevoegen aan dagtracker</button>
+    <button onclick="scannedProd=null;_scanLock=false;document.getElementById('scan-result').classList.remove('show');document.getElementById('scan-result').innerHTML='';" style="width:100%;padding:9px;border-radius:var(--rsm);background:none;border:1.5px solid var(--border2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;margin-top:7px">↩ Opnieuw</button>`;
+  el.classList.add('show');
+}
+
+function updateCalc(){if(!scannedProd)return;const g=parseInt(document.getElementById('sg')?.value)||100;const f=g/100;const el=document.getElementById('sc');if(el)el.textContent=Math.round(scannedProd.kcal*f)+' kcal · '+Math.round(scannedProd.prot*f*10)/10+'g eiwit';}
+function toggleScanPerson(id){const i=scanPersons.indexOf(id);if(i>-1)scanPersons.splice(i,1);else scanPersons.push(id);const c=document.getElementById('spb');if(c)c.innerHTML=members.map(m=>`<button class="scanner-person-btn${scanPersons.includes(m.id)?' sel':''}" onclick="toggleScanPerson('${m.id}')">${m.emoji} ${m.name}</button>`).join('');}
+
+async function addScan(){
+  const ge=document.getElementById('sg');const me=document.getElementById('smt');const g=parseInt(ge?.value)||100;const mt=me?.value||'snack1';
+  if(!scannedProd){alert('Geen product gescand.');return;}if(!scanPersons.length){alert('Selecteer minimaal één persoon.');return;}
+  const f=g/100;const k=Math.round(scannedProd.kcal*f);const p=Math.round(scannedProd.prot*f*10)/10;const n=scannedProd.name+' ('+g+'g)';
+  closeScanner();for(const pid of [...scanPersons])await addLogItem(pid,mt,n,k,p);
+  alert(n+' toegevoegd!');if(activeTab==='dag')renderDag();else switchTab('dag');
+}
+
+function closeScanner(){if(codeReader){try{codeReader.reset();}catch(e){}codeReader=null;}scannedProd=null;_scanLock=false;document.getElementById('scan-ov')?.remove();}
+
+// INIT
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='SIGNED_IN'&&session?.user){
+    // Only handle via onAuthStateChange for token refresh, not initial login
+  }
+});
+
+// Check session on load
+// Inline PWA manifest
+const manifestData = {
+  name: 'Gezinfit',
+  short_name: 'Gezinfit',
+  description: 'Samen eten · Samen bewegen',
+  start_url: 'https://app.gezinfit.nl/',
+  display: 'standalone',
+  background_color: '#27AE60',
+  theme_color: '#27AE60',
+  orientation: 'portrait',
+  icons: [{
+    src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2327AE60'/><text y='.9em' font-size='80' x='10'>🥗</text></svg>",
+    sizes: '192x192',
+    type: 'image/svg+xml'
+  }]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(manifestBlob);
+const manifestLink = document.createElement('link');
+manifestLink.rel = 'manifest';
+manifestLink.href = manifestURL;
+document.head.appendChild(manifestLink);
+
+window.addEventListener('load', async()=>{
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('invite')){
+    // Gezinslid uitnodiging
+    showAuthTab('register');
+  } else if(p.get('newgezin')){
+    // Nieuw gezin uitnodiging
+    showAuthTab('register');
+    // Mark this as a new family registration
+    window._newGezinInvite = true;
+  } else {
+    showAuthTab('login');
+  }
+  // Check if already logged in
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session?.user){
+      await loadData(session.user);
+    }
+  }catch(e){console.log('No session');}
+});
+</script>
+</body>
+</html>
